@@ -1,0 +1,56 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "level-02.tmx",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "level-01.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
+            "scale": 3.0103125,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 331.1948510329077,
+                "y": 183.86795390843974
+            }
+        },
+        "level-02.tmx": {
+            "scale": 2.81140625,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 292.0246762629911,
+                "y": 183.53804257211135
+            }
+        },
+        "robotron.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.imagePath": "G:/CodingStuff/flutter/robotron/assets/images/Terrain",
+    "map.height": 23,
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 40,
+    "openFiles": [
+        "robotron.tsx",
+        "level-01.tmx",
+        "level-02.tmx"
+    ],
+    "project": "robotron.tiled-project",
+    "recentFiles": [
+        "robotron.tsx",
+        "level-01.tmx",
+        "level-02.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}
