@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:robotron/characters/character.dart';
-import 'package:robotron/collision/collision_objects.dart';
 import 'package:robotron/robotron.dart';
 
 enum PlayerState { idle }
@@ -21,7 +19,7 @@ class GunPowerup extends SpriteAnimationGroupComponent
 
   @override
   // ignore: overridden_fields
-  bool debugMode = true;
+  // bool debugMode = true;
 
   @override
   FutureOr<void> onLoad() {

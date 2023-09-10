@@ -1,13 +1,15 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:robotron/components/characters/enemy_character.dart';
+import 'package:robotron/components/collision/collision_objects.dart';
 
 import 'package:robotron/robotron.dart';
 
-class Bullet extends SpriteComponent with HasGameRef<Robotron> {
+class Bullet extends SpriteComponent
+    with HasGameRef<Robotron>, CollisionCallbacks {
   final double vecX;
   final double vecY;
 
@@ -27,6 +29,20 @@ class Bullet extends SpriteComponent with HasGameRef<Robotron> {
     size = Vector2.all(10);
     add(CircleHitbox(radius: 5));
     return super.onLoad();
+  }
+
+  @override
+  void onCollisionStart(
+      Set<Vector2> intersectionPoints, PositionComponent other) {
+    if (other is CollisionObject) {
+      removeFromParent();
+    }
+    if (other is EnemyCharacter) {
+      gameRef.world.character.score += 1;
+      gameRef.world.scoreTextComponent.text =
+          "Score: ${gameRef.world.character.score.toString()}";
+    }
+    super.onCollisionStart(intersectionPoints, other);
   }
 
   @override

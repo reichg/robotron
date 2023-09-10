@@ -11,6 +11,9 @@ class CollisionObject extends PositionComponent {
   bool debugMode = true;
 
   @override
+  int priority = 10;
+
+  @override
   FutureOr<void> onLoad() {
     add(RectangleHitbox());
     return super.onLoad();

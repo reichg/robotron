@@ -5,8 +5,8 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/palette.dart';
 import 'package:flutter/material.dart';
-import 'package:robotron/joystick/left_joystick.dart';
-import 'package:robotron/joystick/right_joystick.dart';
+import 'package:robotron/components/joystick/left_joystick.dart';
+import 'package:robotron/components/joystick/right_joystick.dart';
 import 'package:robotron/levels/level.dart';
 
 class Robotron extends FlameGame {
@@ -28,9 +28,12 @@ class Robotron extends FlameGame {
       height: 360,
     );
     cam.viewfinder.anchor = Anchor.topLeft;
-
     leftJoystick = LeftJoystick();
+    leftJoystick.anchor = Anchor.center;
+    leftJoystick.position = Vector2(68, 200);
     rightJoystick = RightJoystick();
+    rightJoystick.position = Vector2(770, 200);
+    rightJoystick.anchor = Anchor.center;
     addAll([cam, world, leftJoystick, rightJoystick]);
 
     return super.onLoad();

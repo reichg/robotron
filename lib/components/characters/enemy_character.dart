@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:robotron/bullet/bullet.dart';
-import 'package:robotron/characters/character.dart';
+import 'package:robotron/components/bullet/bullet.dart';
+import 'package:robotron/components/characters/character.dart';
 import 'package:robotron/robotron.dart';
 
 enum PlayerState { running }
@@ -11,7 +11,7 @@ enum PlayerState { running }
 class EnemyCharacter extends SpriteAnimationGroupComponent
     with HasGameRef<Robotron>, CollisionCallbacks {
   String character;
-  Character characterToChase;
+  MainCharacter characterToChase;
 
   EnemyCharacter(
       {position,
@@ -27,7 +27,7 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
 
   @override
   // ignore: overridden_fields
-  bool debugMode = true;
+  // bool debugMode = true;
 
   @override
   FutureOr<void> onLoad() {
@@ -40,7 +40,6 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if (other is Bullet) {
       print("Hit with bullet");
-      other.removeFromParent();
       removeFromParent();
     }
     super.onCollision(intersectionPoints, other);
@@ -69,7 +68,6 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
       flipHorizontallyAroundCenter();
       isFacingLeft = false;
     }
-    print("direction: $direction");
   }
 
   void _loadAllAnimations() {

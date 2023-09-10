@@ -2,17 +2,20 @@ import 'dart:async';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:robotron/Powerups/gun_powerup.dart';
-import 'package:robotron/collision/collision_objects.dart';
+import 'package:flame/effects.dart';
+import 'package:flame_noise/flame_noise.dart';
+import 'package:robotron/components/Powerups/gun_powerup.dart';
+import 'package:robotron/components/characters/enemy_character.dart';
+import 'package:robotron/components/collision/collision_objects.dart';
 import 'package:robotron/robotron.dart';
 
 enum PlayerState { idle, running }
 
-class Character extends SpriteAnimationGroupComponent
+class MainCharacter extends SpriteAnimationGroupComponent
     with HasGameRef<Robotron>, CollisionCallbacks {
   String character;
 
-  Character({position, anchor, required this.character})
+  MainCharacter({position, anchor, required this.character})
       : super(position: position, anchor: anchor);
   late final SpriteAnimation idleAnimation;
   late final SpriteAnimation runningAnimation;
@@ -21,11 +24,13 @@ class Character extends SpriteAnimationGroupComponent
   double moveSpeed = 70;
   bool collided = false;
   bool gunPowerupEnabled = false;
+  int score = 0;
+  int health = 100;
   Timer gunPowerupTimer = Timer(8);
 
   @override
   // ignore: overridden_fields
-  bool debugMode = true;
+  // bool debugMode = true;
 
   @override
   FutureOr<void> onLoad() {
@@ -37,6 +42,7 @@ class Character extends SpriteAnimationGroupComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if (other is CollisionObject) {
+      print("collision with collisionobject");
       if (intersectionPoints.length == 2) {
         var pointA = intersectionPoints.elementAt(0);
         var pointB = intersectionPoints.elementAt(1);
@@ -57,6 +63,23 @@ class Character extends SpriteAnimationGroupComponent
       gunPowerupEnabled = true;
       gunPowerupTimer.start();
       other.removeFromParent();
+    }
+    if (other is EnemyCharacter) {
+      gameRef.cam.viewfinder.add(
+        MoveEffect.by(
+          Vector2(5, 5),
+          PerlinNoiseEffectController(duration: 0.2, frequency: 400),
+        ),
+      );
+      health -= 25;
+
+      other.removeFromParent();
+      if (health < 0) {
+        health = 0;
+      }
+
+      gameRef.world.healthTextComponent.text = "Health: ${health.toString()}%";
+      gameRef.world.healthBar.width = 150 * (health.toDouble() / 100);
     }
     super.onCollision(intersectionPoints, other);
   }
