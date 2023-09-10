@@ -22,7 +22,7 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   late final SpriteAnimation runningAnimation;
   bool isFacingLeft = false;
   final double stepTime = 0.05;
-  double moveSpeed = 75;
+  double moveSpeed = 70;
   bool collided = false;
 
   @override

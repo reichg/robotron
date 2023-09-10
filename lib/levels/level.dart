@@ -36,8 +36,11 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
 
   Random rnd = Random();
 
+  Vector2 bottomLeft = Vector2(66, 304);
+  Vector2 topRight = Vector2(552, 47);
+
   @override
-  bool debugMode = true;
+  bool debugMode = false;
 
   @override
   FutureOr<void> onLoad() async {
@@ -75,8 +78,10 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     );
     add(healthTextComponent);
 
+    List<double> gunPowerUpRandomCoords = _randomCoodinatePairInWorldbounds();
     add(GunPowerup(
-      position: _randomVector(),
+      position:
+          Vector2(gunPowerUpRandomCoords.first, gunPowerUpRandomCoords.last),
       anchor: Anchor.center,
     ));
 
@@ -104,11 +109,18 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     enemySpawnTimer.update(dt);
     enemySpawnTimer.onTick = () {
       if (totalSpawned <= 5) {
-        add(EnemyCharacter(
+        List<double> coordinates =
+            _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
+                characterLocation: gameRef.world.character.position);
+        var enemyCharacter = EnemyCharacter(
             character: "Pink Man",
             anchor: Anchor.center,
-            position: _randomVector(),
-            characterToChase: character));
+            position: Vector2(coordinates.first, coordinates.last),
+            characterToChase: character);
+// _randomVector()
+
+        print("enemyPosition: ${enemyCharacter.position}");
+        add(enemyCharacter);
         totalSpawned += 1;
       }
     };
@@ -134,9 +146,27 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     };
   }
 
-  Vector2 _randomVector() {
-    double randomX = rnd.nextInt(545 - 63) + 63;
-    double randomY = rnd.nextInt(304 - 47) + 47;
-    return Vector2(randomX, randomY);
+  List<double> _randomCoodinatePairInWorldbounds() {
+    double randomX = 66 + rnd.nextInt(545 - 63).toDouble();
+    double randomY = 44 + rnd.nextInt(304 - 44).toDouble();
+    List<double> coordinates = [randomX, randomY];
+
+    return coordinates;
+  }
+
+  List<double> _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
+      {required Vector2 characterLocation}) {
+    double randomX = 66 + rnd.nextInt(545 - 63).toDouble();
+    double randomY = 44 + rnd.nextInt(304 - 44).toDouble();
+    List<double> coordinates = [randomX, randomY];
+    var distance = Vector2(coordinates.first, coordinates.last)
+        .distanceTo(characterLocation);
+    print("character position: $characterLocation");
+    if (distance < 100) {
+      _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
+          characterLocation: characterLocation);
+    }
+
+    return coordinates;
   }
 }

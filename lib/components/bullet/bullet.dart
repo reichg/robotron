@@ -18,8 +18,8 @@ class Bullet extends SpriteComponent
     required this.vecY,
   });
 
-  @override
-  bool debugMode = true;
+  // @override
+  // bool debugMode = true;
   double speed = 150;
 
   @override

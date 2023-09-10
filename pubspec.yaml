@@ -39,6 +39,7 @@ dependencies:
   flame_tiled: ^1.13.0
   a_star_algorithm: ^0.3.0
   flame_noise: ^0.1.1+4
+  google_fonts: ^5.1.0
 
 dev_dependencies:
   flutter_test:
