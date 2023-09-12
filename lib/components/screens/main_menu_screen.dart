@@ -6,30 +6,31 @@ class MainMenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      child: Scaffold(
-        body: Center(
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 50),
-                child: Text("Robotron"),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 50),
-                child: Text("Tab To Play!"),
-              ),
-            ],
-          ),
+    return Scaffold(
+      body: Center(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 50),
+              child: Text("Robotron"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (context) => const GamePlayScreen(),
+                  ),
+                );
+              },
+              child: Text("Play"),
+            ),
+            ElevatedButton(
+              onPressed: () {},
+              child: Text("Settings"),
+            )
+          ],
         ),
       ),
-      onTap: () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const GamePlayScreen(),
-          ),
-        );
-      },
     );
   }
 }
