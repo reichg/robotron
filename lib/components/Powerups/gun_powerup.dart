@@ -18,8 +18,8 @@ class GunPowerup extends SpriteAnimationGroupComponent
   }) : super(position: position, anchor: anchor);
 
   @override
-  // ignore: overridden_fields
-  // bool debugMode = true;
+  //ignore: overridden_fields
+  bool debugMode = true;
 
   @override
   FutureOr<void> onLoad() {

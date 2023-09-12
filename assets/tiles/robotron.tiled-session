@@ -19,11 +19,11 @@
             }
         },
         "level-02.tmx": {
-            "scale": 2.81140625,
+            "scale": 2,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 290.60190073917636,
-                "y": 182.47096092925028
+                "x": 312,
+                "y": 250
             }
         },
         "robotron.tsx": {

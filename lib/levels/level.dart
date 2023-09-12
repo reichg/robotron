@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame_tiled/flame_tiled.dart';
@@ -10,7 +9,6 @@ import 'package:robotron/components/bullet/bullet.dart';
 import 'package:robotron/components/characters/character.dart';
 import 'package:robotron/components/characters/enemy_character.dart';
 import 'package:robotron/components/collision/collision_objects.dart';
-import 'package:robotron/components/joystick/left_joystick.dart';
 import 'package:robotron/components/joystick/right_joystick.dart';
 import 'package:robotron/robotron.dart';
 
@@ -23,6 +21,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   late RightJoystick rightJoystick;
   late TextComponent scoreTextComponent;
   late TextComponent healthTextComponent;
+  late GunPowerup gunPowerup;
 
   Timer bulletSpawnTimer = Timer(0.2, repeat: true);
   Timer enemySpawnTimer = Timer(2, repeat: true);
@@ -48,7 +47,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       "$levelName.tmx",
       Vector2.all(16),
     );
-
+    var height = gameRef.deviceHeight;
+    print("device height: $height");
     add(level);
 
     final spawnPointsLayer = level.tileMap.getLayer<ObjectGroup>('SpawnPoints');
@@ -79,11 +79,14 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     add(healthTextComponent);
 
     List<double> gunPowerUpRandomCoords = _randomCoodinatePairInWorldbounds();
-    add(GunPowerup(
+    gunPowerup = GunPowerup(
       position:
           Vector2(gunPowerUpRandomCoords.first, gunPowerUpRandomCoords.last),
       anchor: Anchor.center,
-    ));
+    );
+    gunPowerup.position = Vector2(560, 305);
+    print("gunPowerup position: ${gunPowerup.position}");
+    add(gunPowerup);
 
     final collisionObjects =
         level.tileMap.getLayer<ObjectGroup>('collisionObjects');
@@ -156,7 +159,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
 
   List<double> _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
       {required Vector2 characterLocation}) {
-    double randomX = 66 + rnd.nextInt(545 - 63).toDouble();
+    double randomX = 66 + rnd.nextInt(545 - 66).toDouble();
     double randomY = 44 + rnd.nextInt(304 - 44).toDouble();
     List<double> coordinates = [randomX, randomY];
     var distance = Vector2(coordinates.first, coordinates.last)
