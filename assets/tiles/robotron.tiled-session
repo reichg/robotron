@@ -14,16 +14,16 @@
             "scale": 3.0103125,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 331.1948510329077,
-                "y": 183.86795390843974
+                "x": 330.86265960759886,
+                "y": 183.70185819578535
             }
         },
         "level-02.tmx": {
-            "scale": 2.81140625,
+            "scale": 2,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 290.60190073917636,
-                "y": 182.47096092925028
+                "x": 311,
+                "y": 249
             }
         },
         "robotron.tsx": {
@@ -44,8 +44,8 @@
     ],
     "project": "robotron.tiled-project",
     "recentFiles": [
-        "robotron.tsx",
         "level-01.tmx",
+        "robotron.tsx",
         "level-02.tmx"
     ],
     "tileset.lastUsedFormat": "tsx",

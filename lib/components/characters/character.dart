@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame_noise/flame_noise.dart';
+import 'package:flutter/material.dart';
 import 'package:robotron/components/Powerups/gun_powerup.dart';
 import 'package:robotron/components/characters/enemy_character.dart';
 import 'package:robotron/components/collision/collision_objects.dart';
@@ -28,6 +30,12 @@ class MainCharacter extends SpriteAnimationGroupComponent
   int health = 100;
   Timer gunPowerupTimer = Timer(8);
 
+  static final Size screenSize = WidgetsBinding.instance.window.physicalSize;
+  static final double aspectRatio =
+      WidgetsBinding.instance.window.devicePixelRatio;
+  final double deviceWidth = screenSize.width / aspectRatio;
+  final double deviceHeight = screenSize.height / aspectRatio;
+
   @override
   // ignore: overridden_fields
   // bool debugMode = true;
@@ -42,7 +50,6 @@ class MainCharacter extends SpriteAnimationGroupComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if (other is CollisionObject) {
-      print("collision with collisionobject");
       if (intersectionPoints.length == 2) {
         var pointA = intersectionPoints.elementAt(0);
         var pointB = intersectionPoints.elementAt(1);

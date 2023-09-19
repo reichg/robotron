@@ -17,8 +17,8 @@ class GunPowerup extends SpriteAnimationGroupComponent
     required anchor,
   }) : super(position: position, anchor: anchor);
 
-  @override
-  // ignore: overridden_fields
+  // @override
+  //ignore: overridden_fields
   // bool debugMode = true;
 
   @override
