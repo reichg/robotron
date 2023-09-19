@@ -1,13 +1,17 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+
 import 'package:robotron/components/joystick/left_joystick.dart';
 import 'package:robotron/components/joystick/right_joystick.dart';
 import 'package:robotron/levels/level.dart';
 
 class Robotron extends FlameGame {
+  final String levelName;
+
   @override
   Color backgroundColor() => Color(0xFF211F30);
   late final CameraComponent cam;
@@ -15,20 +19,24 @@ class Robotron extends FlameGame {
   late final RightJoystick rightJoystick;
   late TextComponent leftJoystickTextComponent;
   late TextComponent rightJoystickTextComponent;
+  late Level world;
   bool gameOver = false;
 
+  // @override
+  // TODO: implement debugMode
+  // final debugMode = true;
+  Robotron({required this.levelName});
   static final Size screenSize = WidgetsBinding.instance.window.physicalSize;
   static final double aspectRatio =
       WidgetsBinding.instance.window.devicePixelRatio;
   final double deviceWidth = screenSize.width / aspectRatio;
   final double deviceHeight = screenSize.height / aspectRatio;
 
-  final world = Level(levelName: 'level-02');
-
   @override
   FutureOr<void> onLoad() async {
     //images to cache
     await images.loadAllImages();
+    await loadWorld();
     cam = CameraComponent.withFixedResolution(
       world: world,
       width: 640,
@@ -76,4 +84,10 @@ class Robotron extends FlameGame {
   void update(double dt) {
     super.update(dt);
   }
+
+  Future<void> loadWorld() async {
+    world = Level(levelName: levelName);
+  }
+
+  void reset() {}
 }

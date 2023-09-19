@@ -27,10 +27,11 @@ class PauseMenu extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
+              gameRef.overlays.remove(PauseMenu.ID);
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (context) {
-                    return MainMenuScreen();
+                    return const MainMenuScreen();
                   },
                 ),
               );

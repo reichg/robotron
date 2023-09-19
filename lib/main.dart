@@ -1,8 +1,6 @@
 import 'package:flame/flame.dart';
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:robotron/components/screens/main_menu_screen.dart';
-import 'package:robotron/robotron.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

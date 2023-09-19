@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:robotron/components/screens/gameplay_screen.dart';
+import 'package:robotron/components/screens/main_menu_screen.dart';
+import 'package:robotron/robotron.dart';
 
-class MainMenuScreen extends StatelessWidget {
-  const MainMenuScreen({Key? key}) : super(key: key);
+class GameOverScreen extends StatelessWidget {
+  static const String ID = "GameOver";
+  final Robotron gameRef;
+  const GameOverScreen({Key? key, required this.gameRef}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +18,8 @@ class MainMenuScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (context) => const GamePlayScreen(),
+                    builder: (context) =>
+                        GamePlayScreen(levelName: gameRef.levelName),
                   ),
                 );
               },
@@ -22,11 +27,15 @@ class MainMenuScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
+                gameRef.overlays.remove(GameOverScreen.ID);
+
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
                     builder: (context) => const MainMenuScreen(),
                   ),
                 );
+
+                // gameRef.reset();
               },
               child: Text("Main Menu!"),
             ),

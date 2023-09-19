@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:robotron/components/screens/gameplay_screen.dart';
+import 'package:robotron/components/screens/level_select_screen.dart';
 
 class MainMenuScreen extends StatelessWidget {
   const MainMenuScreen({Key? key}) : super(key: key);
@@ -18,7 +19,7 @@ class MainMenuScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (context) => const GamePlayScreen(),
+                    builder: (context) => const LevelSelectScreen(),
                   ),
                 );
               },
