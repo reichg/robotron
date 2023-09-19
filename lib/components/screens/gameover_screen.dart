@@ -27,8 +27,6 @@ class GameOverScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                gameRef.overlays.remove(GameOverScreen.ID);
-
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
                     builder: (context) => const MainMenuScreen(),
