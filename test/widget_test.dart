@@ -7,13 +7,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:robotron/main.dart';
+import 'package:robotron/components/screens/gameplay_screen.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(GamePlayScreen(
+      levelName: "level-02",
+    ));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

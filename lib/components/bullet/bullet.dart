@@ -1,12 +1,15 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
-import 'dart:convert';
 
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:robotron/components/characters/enemy_character.dart';
+import 'package:robotron/components/collision/collision_objects.dart';
 
 import 'package:robotron/robotron.dart';
 
-class Bullet extends SpriteComponent with HasGameRef<Robotron> {
+class Bullet extends SpriteComponent
+    with HasGameRef<Robotron>, CollisionCallbacks {
   final double vecX;
   final double vecY;
 
@@ -15,8 +18,8 @@ class Bullet extends SpriteComponent with HasGameRef<Robotron> {
     required this.vecY,
   });
 
-  @override
-  bool debugMode = true;
+  // @override
+  // bool debugMode = true;
   double speed = 150;
 
   @override
@@ -24,8 +27,22 @@ class Bullet extends SpriteComponent with HasGameRef<Robotron> {
     anchor = Anchor.center;
     sprite = Sprite(game.images.fromCache("Items/Bullet/Bullet.png"));
     size = Vector2.all(10);
-
+    add(CircleHitbox(radius: 5));
     return super.onLoad();
+  }
+
+  @override
+  void onCollisionStart(
+      Set<Vector2> intersectionPoints, PositionComponent other) {
+    if (other is CollisionObject) {
+      removeFromParent();
+    }
+    if (other is EnemyCharacter) {
+      gameRef.world.character.score += 1;
+      gameRef.world.scoreTextComponent.text =
+          "Score: ${gameRef.world.character.score.toString()}";
+    }
+    super.onCollisionStart(intersectionPoints, other);
   }
 
   @override
@@ -53,46 +70,4 @@ class Bullet extends SpriteComponent with HasGameRef<Robotron> {
       removeFromParent();
     }
   }
-
-  Bullet copyWith({
-    double? vecX,
-    double? vecY,
-  }) {
-    return Bullet(
-      vecX: vecX ?? this.vecX,
-      vecY: vecY ?? this.vecY,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'vecX': vecX,
-      'vecY': vecY,
-    };
-  }
-
-  factory Bullet.fromMap(Map<String, dynamic> map) {
-    return Bullet(
-      vecX: map['vecX'] as double,
-      vecY: map['vecY'] as double,
-    );
-  }
-
-  String toJson() => json.encode(toMap());
-
-  factory Bullet.fromJson(String source) =>
-      Bullet.fromMap(json.decode(source) as Map<String, dynamic>);
-
-  @override
-  String toString() => 'Bullet(vecX: $vecX, vecY: $vecY)';
-
-  @override
-  bool operator ==(covariant Bullet other) {
-    if (identical(this, other)) return true;
-
-    return other.vecX == vecX && other.vecY == vecY;
-  }
-
-  @override
-  int get hashCode => vecX.hashCode ^ vecY.hashCode;
 }

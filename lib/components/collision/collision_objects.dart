@@ -7,8 +7,11 @@ class CollisionObject extends PositionComponent {
   CollisionObject({required size, required position})
       : super(size: size, position: position);
 
+  // @override
+  // bool debugMode = true;
+
   @override
-  bool debugMode = true;
+  int priority = 10;
 
   @override
   FutureOr<void> onLoad() {
