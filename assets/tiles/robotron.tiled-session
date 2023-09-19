@@ -22,8 +22,8 @@
             "scale": 2,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 311,
-                "y": 249
+                "x": 317,
+                "y": 181
             }
         },
         "robotron.tsx": {
@@ -39,14 +39,13 @@
     "map.width": 40,
     "openFiles": [
         "robotron.tsx",
-        "level-01.tmx",
         "level-02.tmx"
     ],
     "project": "robotron.tiled-project",
     "recentFiles": [
-        "level-01.tmx",
         "robotron.tsx",
-        "level-02.tmx"
+        "level-02.tmx",
+        "level-01.tmx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

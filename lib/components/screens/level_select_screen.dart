@@ -11,7 +11,7 @@ class LevelSelectScreen extends StatefulWidget {
 class _LevelSelectScreenState extends State<LevelSelectScreen> {
   var levelNames = ["level-02"];
   int _selectedIndex = 0;
-  String levelName = "";
+  String levelName = "level-02";
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,7 +33,6 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
                     setState(() {
                       _selectedIndex = index;
                       levelName = levelNames[index];
-                      print("level name: $levelName");
                     });
                   },
                 );

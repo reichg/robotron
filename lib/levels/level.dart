@@ -206,6 +206,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     }
   }
 
+  // Get random coordinate pair within the playable world bounds
   List<double> _randomCoodinatePairInWorldbounds() {
     double randomX = 66 + rnd.nextInt(545 - 63).toDouble();
     double randomY = 44 + rnd.nextInt(304 - 44).toDouble();
@@ -214,7 +215,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     return coordinates;
   }
 
-// WORK ON COORDINATES
+  // Get position for enemy spawn that is 125 units away and in playable world bounds
   List<double> _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
       {required Vector2 characterLocation}) {
     double randomX = 66 + rnd.nextInt(545 - 66).toDouble();
@@ -222,15 +223,12 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     List<double> coordinates = [randomX, randomY];
     var distance = Vector2(coordinates.first, coordinates.last)
         .distanceTo(characterLocation);
-    print("coordinates before check: $coordinates");
-    print("distance before check: $distance");
-    if (distance < 100) {
-      print("getting new coordinates");
-      _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
-          characterLocation: characterLocation);
+
+    if (distance > 125) {
+      return coordinates;
     }
-    print("final coordinates: $coordinates");
-    print("final distance: $distance");
-    return coordinates;
+
+    return _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
+        characterLocation: characterLocation);
   }
 }
