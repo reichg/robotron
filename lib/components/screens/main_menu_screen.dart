@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:robotron/components/screens/gameplay_screen.dart';
 import 'package:robotron/components/screens/level_select_screen.dart';
 
 class MainMenuScreen extends StatelessWidget {
