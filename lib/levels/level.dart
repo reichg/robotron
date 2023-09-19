@@ -23,9 +23,11 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   late TextComponent scoreTextComponent;
   late TextComponent healthTextComponent;
   late TextComponent countdownTextComponent;
+  late TextComponent timeLeftTextComponent;
   late GunPowerup gunPowerup;
 
   Timer startCountdown = Timer(1, repeat: true);
+  Timer gameTimer = Timer(1, repeat: true);
   Timer bulletSpawnTimer = Timer(0.2, repeat: true);
   Timer enemySpawnTimer = Timer(2, repeat: true);
 
@@ -36,7 +38,9 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   final double deviceHeight = screenSize.height / aspectRatio;
 
   bool gameStarted = false;
+  bool gameTimerStarted = false;
   int timerCountdownToStart = 3;
+  int timeLeft = 5;
   bool gameOver = false;
 
   RectangleComponent healthBar = RectangleComponent.fromRect(
@@ -79,6 +83,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     //     default:
     //   }
     // }
+
     character = MainCharacter(
       character: "Ninja Frog",
       anchor: Anchor.center,
@@ -109,6 +114,15 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       ),
     );
     add(countdownTextComponent);
+
+    timeLeftTextComponent = TextComponent(
+      text: "Time Left: 5",
+      anchor: Anchor.center,
+      position:
+          Vector2(topRight.x - ((topRight.x - bottomLeft.x) / 2) - 25, 15),
+    );
+
+    add(timeLeftTextComponent);
 
     List<double> gunPowerUpRandomCoords = _randomCoodinatePairInWorldbounds();
     gunPowerup = GunPowerup(
@@ -141,14 +155,17 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   @override
   void update(double dt) {
     super.update(dt);
+    if (gameOver) {
+      gameRef.pauseEngine();
+    }
     startCountdown.update(dt);
     startCountdown.onTick = () {
       if (timerCountdownToStart < 0) {
-        startCountdown.repeat = false;
-        gameStarted = true;
         countdownTextComponent.removeFromParent();
       } else {
         if (timerCountdownToStart == 0) {
+          startCountdown.repeat = false;
+          gameStarted = true;
           countdownTextComponent.text = "GO!";
         } else {
           countdownTextComponent.text = "Countdown: $timerCountdownToStart";
@@ -157,7 +174,18 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       }
     };
 
-    if (gameStarted == true) {
+    if (gameStarted) {
+      gameTimer.update(dt);
+      gameTimer.onTick = () {
+        print("tick");
+        timeLeft -= 1;
+        timeLeftTextComponent.text = "Time Left: $timeLeft";
+        if (timeLeft == 0) {
+          gameTimer.stop();
+          gameOver = true;
+        }
+      };
+
       enemySpawnTimer.update(dt);
       enemySpawnTimer.onTick = () {
         if (totalSpawned < 5) {
