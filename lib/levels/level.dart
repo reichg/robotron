@@ -23,11 +23,18 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   late TextComponent scoreTextComponent;
   late TextComponent healthTextComponent;
   late TextComponent countdownTextComponent;
+  late TextComponent timeLeftTextComponent;
+  late TextComponent newRoundTextComponent;
   late GunPowerup gunPowerup;
 
-  Timer startCountdown = Timer(1, repeat: true);
-  Timer bulletSpawnTimer = Timer(0.2, repeat: true);
-  Timer enemySpawnTimer = Timer(2, repeat: true);
+  Timer startCountdown = Timer(1, repeat: true, autoStart: false);
+  Timer gameTimer = Timer(1, repeat: true, autoStart: false);
+  Timer bulletSpawnTimer = Timer(0.2, repeat: true, autoStart: false);
+  Timer enemySpawnTimer = Timer(2, repeat: true, autoStart: false);
+  Timer betweenRoundTimer = Timer(1, repeat: true, autoStart: false);
+
+  bool roundWin = false;
+  int currentRound = 1;
 
   static final Size screenSize = WidgetsBinding.instance.window.physicalSize;
   static final double aspectRatio =
@@ -36,8 +43,13 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   final double deviceHeight = screenSize.height / aspectRatio;
 
   bool gameStarted = false;
+  bool gameTimerStarted = false;
   int timerCountdownToStart = 3;
+  int timeLeft = 45;
   bool gameOver = false;
+  int timeBetweenRounds = 5;
+
+  double enemyMoveSpeed = 70;
 
   RectangleComponent healthBar = RectangleComponent.fromRect(
     Rect.fromLTWH(405, 5, 150, 30),
@@ -79,6 +91,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     //     default:
     //   }
     // }
+
     character = MainCharacter(
       character: "Ninja Frog",
       anchor: Anchor.center,
@@ -110,6 +123,15 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     );
     add(countdownTextComponent);
 
+    timeLeftTextComponent = TextComponent(
+      text: "Time Left: 5",
+      anchor: Anchor.center,
+      position:
+          Vector2(topRight.x - ((topRight.x - bottomLeft.x) / 2) - 25, 15),
+    );
+
+    add(timeLeftTextComponent);
+
     List<double> gunPowerUpRandomCoords = _randomCoodinatePairInWorldbounds();
     gunPowerup = GunPowerup(
       position:
@@ -135,33 +157,54 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     }
     startCountdown.start();
     bulletSpawnTimer.start();
+    gameTimer.start();
+    enemySpawnTimer.start();
     return super.onLoad();
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+    if (gameOver) {
+      gameRef.pauseEngine();
+    }
+
     startCountdown.update(dt);
     startCountdown.onTick = () {
-      if (timerCountdownToStart < 0) {
-        startCountdown.repeat = false;
+      if (timerCountdownToStart == 0) {
         gameStarted = true;
-        countdownTextComponent.removeFromParent();
-      } else {
-        if (timerCountdownToStart == 0) {
-          countdownTextComponent.text = "GO!";
-        } else {
-          countdownTextComponent.text = "Countdown: $timerCountdownToStart";
-        }
-        timerCountdownToStart -= 1;
+        countdownTextComponent.text = "GO!";
       }
+      if (timerCountdownToStart > 0) {
+        countdownTextComponent.text = "Countdown: $timerCountdownToStart";
+      }
+      if (timerCountdownToStart < 0) {
+        gameTimer.start();
+        enemySpawnTimer.start();
+        bulletSpawnTimer.start();
+        startCountdown.stop();
+        countdownTextComponent.removeFromParent();
+      }
+      timerCountdownToStart -= 1;
     };
+    startCountdown.isRunning()
+        ? null
+        : countdownTextComponent.removeFromParent();
 
-    if (gameStarted == true) {
+    if (gameStarted) {
+      gameTimer.update(dt);
+      gameTimer.onTick = () {
+        timeLeft -= 1;
+        timeLeftTextComponent.text = "Time Left: $timeLeft";
+        if (timeLeft == 0) {
+          gameTimer.stop();
+          gameOver = true;
+        }
+      };
+
       enemySpawnTimer.update(dt);
       enemySpawnTimer.onTick = () {
         if (totalSpawned < 5) {
-          print("character position: ${gameRef.world.character.position}");
           List<double> coordinates =
               _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
                   characterLocation: gameRef.world.character.position);
@@ -169,12 +212,17 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
               character: "Pink Man",
               anchor: Anchor.center,
               position: Vector2(coordinates.first, coordinates.last),
-              characterToChase: character);
-          print("enemy character position: ${enemyCharacter.position}");
+              characterToChase: character,
+              moveSpeed: enemyMoveSpeed);
+
           add(enemyCharacter);
           totalSpawned += 1;
         }
       };
+
+      if (gameRef.world.character.score == 1) {
+        roundWin = true;
+      }
 
       character.gunPowerupEnabled
           ? bulletSpawnTimer.limit = 0.1
@@ -195,6 +243,27 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
           }
         }
       };
+
+      if (roundWin) {
+        betweenRoundsGameState();
+        betweenRoundTimer.start();
+        betweenRoundTimer.update(dt);
+
+        roundWin = false;
+      }
+      if (betweenRoundTimer.isRunning()) {
+        betweenRoundTimer.update(dt);
+        betweenRoundTimer.onTick = () {
+          timeBetweenRounds -= 1;
+          if (timeBetweenRounds > 2) {}
+          if (timeBetweenRounds <= 0) {
+            startRound();
+            increaseDifficulty();
+            betweenRoundTimer.stop();
+            newRoundTextComponent.removeFromParent();
+          }
+        };
+      }
 
       if (gameRef.world.character.health <= 0) {
         gameOver = true;
@@ -230,5 +299,53 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
 
     return _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
         characterLocation: characterLocation);
+  }
+
+  void betweenRoundsGameState() {
+    reset();
+
+    currentRound += 1;
+    newRoundTextComponent = TextComponent(
+      text: "Round #$currentRound",
+      anchor: Anchor.center,
+      position: Vector2(
+        topRight.x - ((topRight.x - bottomLeft.x) / 2),
+        bottomLeft.y - ((bottomLeft.y - topRight.y) / 2),
+      ),
+    );
+    add(newRoundTextComponent);
+    betweenRoundTimer.start();
+  }
+
+  void startRound() {
+    startCountdown.start();
+    countdownTextComponent.text = "Countdown: $timerCountdownToStart";
+    add(countdownTextComponent);
+  }
+
+  void reset() {
+    for (var child in gameRef.world.children) {
+      if (child is Bullet || child is EnemyCharacter) {
+        child.removeFromParent();
+      }
+    }
+    character.reset();
+
+    timeLeft = 45;
+    totalSpawned = 0;
+    timerCountdownToStart = 3;
+    timeBetweenRounds = 5;
+    gameRef.world.timeLeftTextComponent.text = "Time Left: $timeLeft";
+    character.reset();
+    startCountdown.stop();
+    gameTimer.stop();
+    enemySpawnTimer.stop();
+  }
+
+  void increaseDifficulty() {
+    if (gameRef.world.enemySpawnTimer.limit - 0.259 > 0) {
+      gameRef.world.enemySpawnTimer.limit -= 0.25;
+    }
+    enemyMoveSpeed += 20;
   }
 }

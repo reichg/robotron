@@ -25,7 +25,7 @@ class GamePlayScreen extends StatelessWidget {
           GameOverScreen.ID: (BuildContext context, Robotron gameRef) =>
               GameOverScreen(
                 gameRef: gameRef,
-              )
+              ),
         },
       ),
     );
