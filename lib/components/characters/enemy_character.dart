@@ -12,17 +12,18 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
     with HasGameRef<Robotron>, CollisionCallbacks {
   String character;
   MainCharacter characterToChase;
+  double moveSpeed;
 
   EnemyCharacter(
       {position,
       anchor,
       required this.character,
-      required this.characterToChase})
+      required this.characterToChase,
+      required this.moveSpeed})
       : super(position: position, anchor: anchor);
   late final SpriteAnimation runningAnimation;
   bool isFacingLeft = false;
   final double stepTime = 0.05;
-  double moveSpeed = 70;
   bool collided = false;
 
   @override
@@ -39,7 +40,6 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if (other is Bullet) {
-      print("Hit with bullet");
       removeFromParent();
     }
     super.onCollision(intersectionPoints, other);

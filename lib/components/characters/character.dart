@@ -36,6 +36,9 @@ class MainCharacter extends SpriteAnimationGroupComponent
   final double deviceWidth = screenSize.width / aspectRatio;
   final double deviceHeight = screenSize.height / aspectRatio;
 
+  Vector2 bottomLeft = Vector2(63, 304);
+  Vector2 topRight = Vector2(576, 47);
+
   @override
   // ignore: overridden_fields
   // bool debugMode = true;
@@ -208,5 +211,18 @@ class MainCharacter extends SpriteAnimationGroupComponent
     } else {
       return Vector2(0, dY);
     }
+  }
+
+  void reset() {
+    MainCharacter character = gameRef.world.character;
+    character.health = 100;
+    character.position = Vector2(
+      topRight.x - ((topRight.x - bottomLeft.x) / 2),
+      bottomLeft.y - ((bottomLeft.y - topRight.y) / 2),
+    );
+    gameRef.world.healthTextComponent.text = "Health: $health%";
+    gameRef.world.healthBar.width = 150 * (health.toDouble() / 100);
+    gameRef.world.character.score = 0;
+    gameRef.world.scoreTextComponent.text = "Score: $score";
   }
 }
