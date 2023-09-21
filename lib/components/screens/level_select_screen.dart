@@ -9,9 +9,18 @@ class LevelSelectScreen extends StatefulWidget {
 }
 
 class _LevelSelectScreenState extends State<LevelSelectScreen> {
-  var levelNames = ["level-02"];
+  static final levelNames = ["level-01", "level-02"];
+  List<Image> levelImages = [];
   int _selectedIndex = 0;
-  String levelName = "level-02";
+  String levelName = levelNames[0];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    loadLevelImages();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,24 +28,42 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
         child: Column(
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 50),
+              padding: EdgeInsets.symmetric(vertical: 20),
               child: Text("Level Select"),
             ),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: levelNames.length,
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  title: Center(child: Text('Item ${levelNames[index]}')),
-                  selected: index == _selectedIndex,
-                  onTap: () {
-                    setState(() {
-                      _selectedIndex = index;
-                      levelName = levelNames[index];
-                    });
-                  },
-                );
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Container(
+                  width: 850,
+                  height: 200,
+                  color: Color.fromARGB(43, 7, 255, 243),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    itemCount: levelImages.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Container(
+                        width: 350,
+                        height: 100,
+                        child: ListTile(
+                          title: Image(
+                            image: levelImages[index].image,
+                            fit: BoxFit.contain,
+                          ),
+                          selected: index == _selectedIndex,
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = index;
+                              levelName = levelNames[index];
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
             ElevatedButton(
               onPressed: () {
@@ -55,6 +82,19 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void loadLevelImages() {
+    levelImages.addAll(
+      [
+        const Image(
+          image: AssetImage("assets/images/Level Images/level_1_image.png"),
+        ),
+        const Image(
+          image: AssetImage("assets/images/Level Images/level_2_image.png"),
+        ),
+      ],
     );
   }
 }

@@ -30,11 +30,11 @@ class MainCharacter extends SpriteAnimationGroupComponent
   int health = 100;
   Timer gunPowerupTimer = Timer(8);
 
-  static final Size screenSize = WidgetsBinding.instance.window.physicalSize;
-  static final double aspectRatio =
-      WidgetsBinding.instance.window.devicePixelRatio;
-  final double deviceWidth = screenSize.width / aspectRatio;
-  final double deviceHeight = screenSize.height / aspectRatio;
+  // Screen size calculations
+  static final Size screenSize = Robotron.screenSize;
+  static final double aspectRatio = Robotron.aspectRatio;
+  final double deviceWidth = Robotron.deviceWidth;
+  final double deviceHeight = Robotron.deviceHeight;
 
   Vector2 bottomLeft = Vector2(63, 304);
   Vector2 topRight = Vector2(576, 47);

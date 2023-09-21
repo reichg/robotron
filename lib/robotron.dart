@@ -30,8 +30,8 @@ class Robotron extends FlameGame {
   static final Size screenSize = WidgetsBinding.instance.window.physicalSize;
   static final double aspectRatio =
       WidgetsBinding.instance.window.devicePixelRatio;
-  final double deviceWidth = screenSize.width / aspectRatio;
-  final double deviceHeight = screenSize.height / aspectRatio;
+  static final double deviceWidth = screenSize.width / aspectRatio;
+  static final double deviceHeight = screenSize.height / aspectRatio;
 
   @override
   FutureOr<void> onLoad() async {
@@ -45,6 +45,26 @@ class Robotron extends FlameGame {
     );
     cam.viewfinder.anchor = Anchor.topLeft;
 
+    addAll([
+      cam,
+      world,
+    ]);
+    createJoysticksAndText();
+
+    return super.onLoad();
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+  }
+
+  Future<void> loadWorld() async {
+    world = Level(levelName: levelName);
+  }
+
+  // Create and add joysticks and their components to game.
+  void createJoysticksAndText() {
     leftJoystick = LeftJoystick();
     leftJoystick.anchor = Anchor.center;
     leftJoystick.position = Vector2(
@@ -67,28 +87,11 @@ class Robotron extends FlameGame {
       position: Vector2(((deviceWidth / 2) + 320 + deviceWidth * 0.027),
           (deviceHeight / 2) - 60),
     );
-
-    // overlays.add('Main Menu');
     addAll([
-      cam,
-      world,
       leftJoystick,
       rightJoystick,
       leftJoystickTextComponent,
       rightJoystickTextComponent
     ]);
-
-    return super.onLoad();
   }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-  }
-
-  Future<void> loadWorld() async {
-    world = Level(levelName: levelName);
-  }
-
-  void reset() {}
 }
