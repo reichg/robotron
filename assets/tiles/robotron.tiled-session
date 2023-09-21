@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "level-02.tmx",
+    "activeFile": "level-01.tmx",
     "expandedProjectPaths": [
     ],
     "fileStates": {
@@ -11,19 +11,22 @@
             "expandedObjectLayers": [
                 2
             ],
-            "scale": 3.0103125,
+            "scale": 2,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 330.86265960759886,
-                "y": 183.70185819578535
+                "x": 325,
+                "y": 222.5
             }
         },
         "level-02.tmx": {
+            "expandedObjectLayers": [
+                3
+            ],
             "scale": 2,
-            "selectedLayer": 2,
+            "selectedLayer": 0,
             "viewCenter": {
-                "x": 317,
-                "y": 181
+                "x": 307.5,
+                "y": 240.5
             }
         },
         "robotron.tsx": {
@@ -39,7 +42,8 @@
     "map.width": 40,
     "openFiles": [
         "robotron.tsx",
-        "level-02.tmx"
+        "level-02.tmx",
+        "level-01.tmx"
     ],
     "project": "robotron.tiled-project",
     "recentFiles": [
