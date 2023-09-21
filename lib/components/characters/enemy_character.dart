@@ -71,13 +71,10 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   }
 
   void _loadAllAnimations() {
-    // idleAnimation = _spriteAnimation('Idle', 11);
-
     runningAnimation = _spriteAnimation('Run', 12);
 
     //List all animations
     animations = {
-      // PlayerState.idle: idleAnimation,
       PlayerState.running: runningAnimation,
     };
 

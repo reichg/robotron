@@ -17,6 +17,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   final String levelName;
 
   Level({required this.levelName});
+
+  // Components
   late TiledComponent level;
   late MainCharacter character;
   late RightJoystick rightJoystick;
@@ -25,160 +27,101 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   late TextComponent countdownTextComponent;
   late TextComponent timeLeftTextComponent;
   late TextComponent newRoundTextComponent;
+  late TextComponent currentRoundTextComponent;
   late GunPowerup gunPowerup;
 
+  // Game information
+  bool gameStarted = false;
+  bool gameTimerStarted = false;
+  bool gameOver = false;
+  int timerCountdownToStart = 3;
+  int timeLeft = 45;
+  int timeBetweenRounds = 5;
+  double enemyMoveSpeed = 70;
+  int killCount = 0;
+  int totalSpawned = 0;
+
+  // All Game Timers
   Timer startCountdown = Timer(1, repeat: true, autoStart: false);
   Timer gameTimer = Timer(1, repeat: true, autoStart: false);
   Timer bulletSpawnTimer = Timer(0.2, repeat: true, autoStart: false);
   Timer enemySpawnTimer = Timer(2, repeat: true, autoStart: false);
   Timer betweenRoundTimer = Timer(1, repeat: true, autoStart: false);
 
+  // Round information
   bool roundWin = false;
   int currentRound = 1;
 
-  static final Size screenSize = WidgetsBinding.instance.window.physicalSize;
-  static final double aspectRatio =
-      WidgetsBinding.instance.window.devicePixelRatio;
-  final double deviceWidth = screenSize.width / aspectRatio;
-  final double deviceHeight = screenSize.height / aspectRatio;
+  // Screen size calculations
+  static final Size screenSize = Robotron.screenSize;
+  static final double aspectRatio = Robotron.aspectRatio;
+  final double deviceWidth = Robotron.deviceWidth;
+  final double deviceHeight = Robotron.deviceHeight;
 
-  bool gameStarted = false;
-  bool gameTimerStarted = false;
-  int timerCountdownToStart = 3;
-  int timeLeft = 45;
-  bool gameOver = false;
-  int timeBetweenRounds = 5;
+  // Viewport coordinates
+  Vector2 bottomLeft = Vector2(63, 304);
+  Vector2 topRight = Vector2(576, 47);
 
-  double enemyMoveSpeed = 70;
-
+  // Healthbar visual
   RectangleComponent healthBar = RectangleComponent.fromRect(
     Rect.fromLTWH(405, 5, 150, 30),
     paint: Paint()..color = Colors.red.withOpacity(1),
   );
 
-  int killCount = 0;
-  int totalSpawned = 0;
-
   Random rnd = Random();
-
-  Vector2 bottomLeft = Vector2(63, 304);
-  Vector2 topRight = Vector2(576, 47);
 
   // @override
   // bool debugMode = true;
 
   @override
   FutureOr<void> onLoad() async {
-    print(levelName);
     level = await TiledComponent.load(
       "$levelName.tmx",
       Vector2.all(16),
     );
     add(level);
 
-    // final spawnPointsLayer = level.tileMap.getLayer<ObjectGroup>('SpawnPoints');
+    // Create components
+    createHealthBar();
+    createCharacter();
+    createTextComponents();
+    createGunPowerup();
+    createCollisionObjects();
 
-    // for (final spawnPoint in spawnPointsLayer!.objects) {
-    //   switch (spawnPoint.class_) {
-    //     case "Character":
-    //       character = MainCharacter(
-    //         character: 'Ninja Frog',
-    //         position: Vector2(spawnPoint.x, spawnPoint.y),
-    //         anchor: Anchor.center,
-    //       );
-    //       add(character);
-    //       break;
-    //     default:
-    //   }
-    // }
-
-    character = MainCharacter(
-      character: "Ninja Frog",
-      anchor: Anchor.center,
-      position: Vector2(
-        topRight.x - ((topRight.x - bottomLeft.x) / 2),
-        bottomLeft.y - ((bottomLeft.y - topRight.y) / 2),
-      ),
-    );
-    add(character);
-
-    add(healthBar);
-    scoreTextComponent = TextComponent(
-        text: "Score: 0", anchor: Anchor.topLeft, position: Vector2(70, 10));
-    add(scoreTextComponent);
-    healthTextComponent = TextComponent(
-      text: "Health: 100%",
-      anchor: Anchor.topRight,
-      position: Vector2(550, 5),
-    );
-    add(healthTextComponent);
-
-    countdownTextComponent = TextComponent(
-      text: "Countdown: 3",
-      anchor: Anchor.center,
-      position: Vector2(
-        topRight.x - ((topRight.x - bottomLeft.x) / 2),
-        bottomLeft.y - ((bottomLeft.y - topRight.y) / 2),
-      ),
-    );
-    add(countdownTextComponent);
-
-    timeLeftTextComponent = TextComponent(
-      text: "Time Left: 5",
-      anchor: Anchor.center,
-      position:
-          Vector2(topRight.x - ((topRight.x - bottomLeft.x) / 2) - 25, 15),
-    );
-
-    add(timeLeftTextComponent);
-
-    List<double> gunPowerUpRandomCoords = _randomCoodinatePairInWorldbounds();
-    gunPowerup = GunPowerup(
-      position:
-          Vector2(gunPowerUpRandomCoords.first, gunPowerUpRandomCoords.last),
-      anchor: Anchor.center,
-    );
-    gunPowerup.position = Vector2(400, 270);
-    add(gunPowerup);
-
-    final collisionObjects =
-        level.tileMap.getLayer<ObjectGroup>('collisionObjects');
-
-    for (final collisionObject in collisionObjects!.objects) {
-      add(
-        CollisionObject(
-          size: Vector2(collisionObject.width, collisionObject.height),
-          position: Vector2(
-            collisionObject.x,
-            collisionObject.y,
-          ),
-        ),
-      );
-    }
+    // Start timers
     startCountdown.start();
     bulletSpawnTimer.start();
     gameTimer.start();
     enemySpawnTimer.start();
+
     return super.onLoad();
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+
+    // If gameover pause the engine
     if (gameOver) {
       gameRef.pauseEngine();
     }
 
+    // 3 second countdown to start of game
     startCountdown.update(dt);
     startCountdown.onTick = () {
+      // Add "go" text at 0
       if (timerCountdownToStart == 0) {
-        gameStarted = true;
         countdownTextComponent.text = "GO!";
       }
+
+      // Countdown text is number until 0
       if (timerCountdownToStart > 0) {
         countdownTextComponent.text = "Countdown: $timerCountdownToStart";
       }
+
+      // After "go" start all timers and game and remove countdown text
       if (timerCountdownToStart < 0) {
+        gameStarted = true;
         gameTimer.start();
         enemySpawnTimer.start();
         bulletSpawnTimer.start();
@@ -187,11 +130,9 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       }
       timerCountdownToStart -= 1;
     };
-    startCountdown.isRunning()
-        ? null
-        : countdownTextComponent.removeFromParent();
 
     if (gameStarted) {
+      // Round timer
       gameTimer.update(dt);
       gameTimer.onTick = () {
         timeLeft -= 1;
@@ -202,60 +143,51 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
         }
       };
 
+      // Controls enemy spawn time
       enemySpawnTimer.update(dt);
       enemySpawnTimer.onTick = () {
         if (totalSpawned < 5) {
-          List<double> coordinates =
-              _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
-                  characterLocation: gameRef.world.character.position);
-          var enemyCharacter = EnemyCharacter(
-              character: "Pink Man",
-              anchor: Anchor.center,
-              position: Vector2(coordinates.first, coordinates.last),
-              characterToChase: character,
-              moveSpeed: enemyMoveSpeed);
-
-          add(enemyCharacter);
-          totalSpawned += 1;
+          createEnemyCharacter();
         }
       };
 
+      // Controls when a round is won
       if (gameRef.world.character.score == 1) {
         roundWin = true;
       }
 
+      // Enables gun powerup
       character.gunPowerupEnabled
           ? bulletSpawnTimer.limit = 0.1
           : bulletSpawnTimer.limit = 0.2;
 
+      // Controls bullet spawn time
       bulletSpawnTimer.update(dt);
-
       bulletSpawnTimer.onTick = () {
         if (gameRef.rightJoystick.direction != JoystickDirection.idle) {
           var intensity = gameRef.rightJoystick.intensity;
+
+          // Want all bullets moving same speed so added the joystick intensity
           if (intensity > .95) {
-            double vecX = (gameRef.rightJoystick.relativeDelta)[0];
-            double vecY = (gameRef.rightJoystick.relativeDelta)[1];
-            var bullet = Bullet(vecX: vecX, vecY: vecY);
-            bullet.anchor = Anchor.center;
-            bullet.position = character.absoluteCenter;
-            add(bullet);
+            createBullet();
           }
         }
       };
 
+      // Set between round state if round won
       if (roundWin) {
         betweenRoundsGameState();
         betweenRoundTimer.start();
         betweenRoundTimer.update(dt);
-
         roundWin = false;
       }
+
+      // Intermission between rounds then start round and increase difficulty.
       if (betweenRoundTimer.isRunning()) {
         betweenRoundTimer.update(dt);
         betweenRoundTimer.onTick = () {
           timeBetweenRounds -= 1;
-          if (timeBetweenRounds > 2) {}
+
           if (timeBetweenRounds <= 0) {
             startRound();
             increaseDifficulty();
@@ -265,10 +197,12 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
         };
       }
 
+      // Game over if health goes to zero
       if (gameRef.world.character.health <= 0) {
         gameOver = true;
       }
 
+      // Show game over overlay if gameover
       if (gameOver) {
         gameRef.overlays.add(GameOverScreen.ID);
       }
@@ -301,10 +235,12 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
         characterLocation: characterLocation);
   }
 
+  // Set state between rounds, resetting positions, score, health, etc
   void betweenRoundsGameState() {
     reset();
 
     currentRound += 1;
+    currentRoundTextComponent.text = "Round: $currentRound";
     newRoundTextComponent = TextComponent(
       text: "Round #$currentRound",
       anchor: Anchor.center,
@@ -317,12 +253,14 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     betweenRoundTimer.start();
   }
 
+  // Start round with countdown timer and add countdown text back to game
   void startRound() {
     startCountdown.start();
     countdownTextComponent.text = "Countdown: $timerCountdownToStart";
     add(countdownTextComponent);
   }
 
+  // Reset game, remove enemies and bullets, stop timers, spawn count, ect
   void reset() {
     for (var child in gameRef.world.children) {
       if (child is Bullet || child is EnemyCharacter) {
@@ -336,16 +274,135 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     timerCountdownToStart = 3;
     timeBetweenRounds = 5;
     gameRef.world.timeLeftTextComponent.text = "Time Left: $timeLeft";
-    character.reset();
+
     startCountdown.stop();
     gameTimer.stop();
     enemySpawnTimer.stop();
   }
 
+  // Increase enemy move speed by 20 units and decrease enemy spawn time each round
   void increaseDifficulty() {
     if (gameRef.world.enemySpawnTimer.limit - 0.259 > 0) {
       gameRef.world.enemySpawnTimer.limit -= 0.25;
     }
     enemyMoveSpeed += 20;
   }
+
+  // Create all text components in the game (score, health, countdown, and time left)
+  void createTextComponents() {
+    scoreTextComponent = TextComponent(
+        text: "Score: 0", anchor: Anchor.topLeft, position: Vector2(70, 10));
+    add(scoreTextComponent);
+
+    healthTextComponent = TextComponent(
+      text: "Health: 100%",
+      anchor: Anchor.topRight,
+      position: Vector2(550, 5),
+    );
+    add(healthTextComponent);
+
+    currentRoundTextComponent = TextComponent(
+      text: "Round: 0",
+      anchor: Anchor.topCenter,
+      position: Vector2(topRight.x - ((topRight.x - bottomLeft.x) / 2), 320),
+    );
+    add(currentRoundTextComponent);
+
+    countdownTextComponent = TextComponent(
+      text: "Countdown: 3",
+      anchor: Anchor.center,
+      position: Vector2(
+        topRight.x - ((topRight.x - bottomLeft.x) / 2),
+        bottomLeft.y - ((bottomLeft.y - topRight.y) / 2),
+      ),
+    );
+    add(countdownTextComponent);
+
+    timeLeftTextComponent = TextComponent(
+      text: "Time Left: 5",
+      anchor: Anchor.center,
+      position:
+          Vector2(topRight.x - ((topRight.x - bottomLeft.x) / 2) - 25, 15),
+    );
+
+    add(timeLeftTextComponent);
+  }
+
+  // Create character and add to game
+  void createCharacter() {
+    character = MainCharacter(
+      character: "Ninja Frog",
+      anchor: Anchor.center,
+      position: Vector2(
+        topRight.x - ((topRight.x - bottomLeft.x) / 2),
+        bottomLeft.y - ((bottomLeft.y - topRight.y) / 2),
+      ),
+    );
+    add(character);
+  }
+
+  // Create gun powerup and add to game
+  void createGunPowerup() {
+    List<double> gunPowerUpRandomCoords = _randomCoodinatePairInWorldbounds();
+    gunPowerup = GunPowerup(
+      position:
+          Vector2(gunPowerUpRandomCoords.first, gunPowerUpRandomCoords.last),
+      anchor: Anchor.center,
+    );
+    gunPowerup.position = Vector2(400, 270);
+    add(gunPowerup);
+  }
+
+  // Create collision objects and add to game
+  void createCollisionObjects() {
+    final collisionObjects =
+        level.tileMap.getLayer<ObjectGroup>('collisionObjects');
+
+    for (final collisionObject in collisionObjects!.objects) {
+      add(
+        CollisionObject(
+          size: Vector2(collisionObject.width, collisionObject.height),
+          position: Vector2(
+            collisionObject.x,
+            collisionObject.y,
+          ),
+        ),
+      );
+    }
+  }
+
+  void createEnemyCharacter() {
+    List<double> coordinates =
+        _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
+            characterLocation: gameRef.world.character.position);
+    var enemyCharacter = EnemyCharacter(
+        character: "Pink Man",
+        anchor: Anchor.center,
+        position: Vector2(coordinates.first, coordinates.last),
+        characterToChase: character,
+        moveSpeed: enemyMoveSpeed);
+
+    add(enemyCharacter);
+    totalSpawned += 1;
+  }
+
+  void createBullet() {
+    double vecX = (gameRef.rightJoystick.relativeDelta)[0];
+    double vecY = (gameRef.rightJoystick.relativeDelta)[1];
+    var bullet = Bullet(vecX: vecX, vecY: vecY);
+    bullet.anchor = Anchor.center;
+    bullet.position = character.absoluteCenter;
+    add(bullet);
+  }
+
+  void createHealthBar() {
+    // Healthbar visual
+    RectangleComponent healthBar = RectangleComponent.fromRect(
+      Rect.fromLTWH(405, 5, 150, 30),
+      paint: Paint()..color = Colors.red.withOpacity(1),
+    );
+    add(healthBar);
+  }
+
+  void createLevel() async {}
 }
