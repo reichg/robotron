@@ -90,6 +90,7 @@ class MainCharacter extends SpriteAnimationGroupComponent
 
       gameRef.world.healthTextComponent.text = "Health: ${health.toString()}%";
       gameRef.world.healthBar.width = 150 * (health.toDouble() / 100);
+      print("width: ${gameRef.world.healthBar.width}");
     }
     super.onCollision(intersectionPoints, other);
   }
