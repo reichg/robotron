@@ -54,11 +54,6 @@ class Robotron extends FlameGame {
     return super.onLoad();
   }
 
-  @override
-  void update(double dt) {
-    super.update(dt);
-  }
-
   Future<void> loadWorld() async {
     world = Level(levelName: levelName);
   }

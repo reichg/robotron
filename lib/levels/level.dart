@@ -77,11 +77,11 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     add(level);
 
     // Create components
+    createCollisionObjects();
     createHealthBar();
     createCharacter();
     createTextComponents();
     createGunPowerup();
-    createCollisionObjects();
 
     // Start timers
     startCountdown.start();
@@ -398,6 +398,4 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     );
     add(healthBar);
   }
-
-  void createLevel() async {}
 }
