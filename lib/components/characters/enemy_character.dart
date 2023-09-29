@@ -33,7 +33,13 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   @override
   FutureOr<void> onLoad() {
     _loadAllAnimations();
-    add(RectangleHitbox());
+    add(
+      RectangleHitbox(
+        anchor: Anchor.center,
+        position: Vector2(width / 2, height / 2),
+        size: Vector2.all(16),
+      ),
+    );
     return super.onLoad();
   }
 
