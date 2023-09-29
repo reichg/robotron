@@ -28,6 +28,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   late TextComponent timeLeftTextComponent;
   late TextComponent newRoundTextComponent;
   late TextComponent currentRoundTextComponent;
+  late RectangleComponent healthBar;
   late GunPowerup gunPowerup;
 
   // Game information
@@ -62,12 +63,6 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   Vector2 bottomLeft = Vector2(63, 304);
   Vector2 topRight = Vector2(576, 47);
 
-  // Healthbar visual
-  RectangleComponent healthBar = RectangleComponent.fromRect(
-    Rect.fromLTWH(405, 5, 150, 30),
-    paint: Paint()..color = Colors.red.withOpacity(1),
-  );
-
   Random rnd = Random();
 
   // @override
@@ -82,11 +77,11 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     add(level);
 
     // Create components
+    createCollisionObjects();
     createHealthBar();
     createCharacter();
     createTextComponents();
     createGunPowerup();
-    createCollisionObjects();
 
     // Start timers
     startCountdown.start();
@@ -397,12 +392,10 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
 
   void createHealthBar() {
     // Healthbar visual
-    RectangleComponent healthBar = RectangleComponent.fromRect(
+    healthBar = RectangleComponent.fromRect(
       Rect.fromLTWH(405, 5, 150, 30),
       paint: Paint()..color = Colors.red.withOpacity(1),
     );
     add(healthBar);
   }
-
-  void createLevel() async {}
 }

@@ -32,9 +32,10 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
               child: Text("Level Select"),
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
+                  alignment: Alignment.center,
                   width: 850,
                   height: 200,
                   color: Color.fromARGB(43, 7, 255, 243),
@@ -51,6 +52,7 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
                             image: levelImages[index].image,
                             fit: BoxFit.contain,
                           ),
+                          selectedTileColor: Colors.blue,
                           selected: index == _selectedIndex,
                           onTap: () {
                             setState(() {

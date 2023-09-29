@@ -4,7 +4,9 @@ import 'dart:ui';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
+import 'package:flame/geometry.dart';
 import 'package:flame_noise/flame_noise.dart';
+import 'package:flame_tiled/flame_tiled.dart';
 import 'package:flutter/material.dart';
 import 'package:robotron/components/Powerups/gun_powerup.dart';
 import 'package:robotron/components/characters/enemy_character.dart';
@@ -29,12 +31,17 @@ class MainCharacter extends SpriteAnimationGroupComponent
   int score = 0;
   int health = 100;
   Timer gunPowerupTimer = Timer(8);
+  bool collisionBottom = false;
+  bool collisionTop = false;
+  bool collisionLeft = false;
+  bool collisionRight = false;
 
   // Screen size calculations
   static final Size screenSize = Robotron.screenSize;
   static final double aspectRatio = Robotron.aspectRatio;
   final double deviceWidth = Robotron.deviceWidth;
   final double deviceHeight = Robotron.deviceHeight;
+  List<PositionComponent> collisionObjects = [];
 
   Vector2 bottomLeft = Vector2(63, 304);
   Vector2 topRight = Vector2(576, 47);
@@ -46,29 +53,19 @@ class MainCharacter extends SpriteAnimationGroupComponent
   @override
   FutureOr<void> onLoad() {
     _loadAllAnimations();
-    add(RectangleHitbox());
+    add(
+      RectangleHitbox(
+        anchor: Anchor.center,
+        position: Vector2(width / 2, height / 2),
+        size: Vector2.all(16),
+      ),
+    );
+    getCollisionComponents();
     return super.onLoad();
   }
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    if (other is CollisionObject) {
-      if (intersectionPoints.length == 2) {
-        var pointA = intersectionPoints.elementAt(0);
-        var pointB = intersectionPoints.elementAt(1);
-        final mid = (pointA + pointB) / 2;
-        final collisionVector = absoluteCenter - mid;
-        // collided = true;
-        if (pointA.x == pointB.x || pointA.y == pointB.y) {
-          // Hitting a side without touching a corner
-          double penetrationDepth = (size.x / 2) - collisionVector.length;
-          collisionVector.normalize();
-          position += collisionVector.scaled(penetrationDepth);
-        } else {
-          position += _cornerBumpDistance(collisionVector, pointA, pointB);
-        }
-      }
-    }
     if (other is GunPowerup) {
       gunPowerupEnabled = true;
       gunPowerupTimer.start();
@@ -95,46 +92,28 @@ class MainCharacter extends SpriteAnimationGroupComponent
   }
 
   @override
-  void onCollisionEnd(PositionComponent other) {
-    // TODO: implement onCollisionEnd
-    super.onCollisionEnd(other);
-    collided = false;
-    JoystickDirection.idle;
-  }
-
-  @override
   void update(double dt) {
     super.update(dt);
+    resetCollisions();
 
-    bool moveLeft = gameRef.leftJoystick.relativeDelta[0] < 0;
-    bool moveRight = gameRef.leftJoystick.relativeDelta[0] > 0;
-    bool moveUp = gameRef.leftJoystick.relativeDelta[1] < 0;
-    bool moveDown = gameRef.leftJoystick.relativeDelta[1] > 0;
+    final originalPosition = position.clone();
+
     double vecX = (gameRef.leftJoystick.relativeDelta * moveSpeed * dt)[0];
     double vecY = (gameRef.leftJoystick.relativeDelta * moveSpeed * dt)[1];
 
-    // horizontal movement left
-    if (moveLeft && position.x > width / 2 && !collided) {
-      x += vecX;
-    }
-    // horizontal movement right
-    if (moveRight &&
-        position.x <
-            gameRef.cam.viewport.camera.visibleWorldRect.right - width / 2 &&
-        !collided) {
-      x += vecX;
-    }
+    final movementThisFrame = Vector2(vecX, vecY);
 
-    //vertical movement up
-    if (moveUp && position.y > height / 2 && !collided) {
-      y += vecY;
+    for (final collisionObject in collisionObjects) {
+      checkCollision(collisionObject, originalPosition, movementThisFrame);
+      if (collided) {
+        break;
+      }
     }
-    //vertical movement down
-    if (moveDown &&
-        position.y <
-            gameRef.cam.viewport.camera.visibleWorldRect.bottom - height / 2 &&
-        !collided) {
-      y += vecY;
+    if (collisionBottom || collisionTop) {
+      movementThisFrame.y = 0;
+    }
+    if (collisionLeft || collisionRight) {
+      movementThisFrame.x = 0;
     }
 
     if (gameRef.leftJoystick.relativeDelta[0] < 0 && isFacingLeft == false) {
@@ -156,6 +135,8 @@ class MainCharacter extends SpriteAnimationGroupComponent
     if (gunPowerupTimer.finished) {
       gunPowerupEnabled = false;
     }
+
+    position = originalPosition + movementThisFrame;
   }
 
   void _loadAllAnimations() {
@@ -184,35 +165,6 @@ class MainCharacter extends SpriteAnimationGroupComponent
     );
   }
 
-  Vector2 _cornerBumpDistance(
-      Vector2 directionVector, Vector2 pointA, Vector2 pointB) {
-    var dX = pointA.x - pointB.x;
-    var dY = pointA.y - pointB.y;
-    // The order of the two intersection points differs per corner
-    // The following if statements negates the necessary values to make the
-    // player move back to the right position
-    if (directionVector.x > 0 && directionVector.y < 0) {
-      // Top right corner
-      dX = -dX;
-    } else if (directionVector.x > 0 && directionVector.y > 0) {
-      // Bottom right corner
-      dX = -dX;
-    } else if (directionVector.x < 0 && directionVector.y > 0) {
-      // Bottom left corner
-      dY = -dY;
-    } else if (directionVector.x < 0 && directionVector.y < 0) {
-      // Top left corner
-      dY = -dY;
-    }
-    // The absolute smallest of both values determines from which side the player bumps
-    // and therefor determines the needed displacement
-    if (dX.abs() < dY.abs()) {
-      return Vector2(dX, 0);
-    } else {
-      return Vector2(0, dY);
-    }
-  }
-
   void reset() {
     MainCharacter character = gameRef.world.character;
     character.health = 100;
@@ -224,5 +176,82 @@ class MainCharacter extends SpriteAnimationGroupComponent
     gameRef.world.healthBar.width = 150 * (health.toDouble() / 100);
     gameRef.world.character.score = 0;
     gameRef.world.scoreTextComponent.text = "Score: $score";
+  }
+
+  // Checks for collisions with all "CollisionObjects"
+  void checkCollision(PositionComponent collisionComponent,
+      Vector2 originalPosition, Vector2 movementThisFrame) {
+    // Main character bounding coordinates for collisions before updating position.
+    var rightThisFrameX = center.x + ((width - 10) / 2);
+    var leftThisFrameX = center.x - ((width - 10) / 2);
+    var topThisFrameY = center.y - ((height - 10) / 2);
+    var bottomThisFrameY = center.y + ((height - 4) / 2);
+
+    // Collision object bounds
+    var collisionComponentRightX =
+        collisionComponent.center.x + (collisionComponent.width / 2);
+    var collisionComponentLeftX =
+        collisionComponent.center.x - (collisionComponent.width / 2);
+    var collisionComponentTopY =
+        collisionComponent.center.y - (collisionComponent.height / 2);
+    var collisionComponentBottomY =
+        collisionComponent.center.y + (collisionComponent.height / 2);
+
+    // Updated Main character bounds after joystick movement has been applied.
+    var rightNextframeX = rightThisFrameX + movementThisFrame.x;
+    var topNextframeY = topThisFrameY + movementThisFrame.y;
+    var leftNextframeX = leftThisFrameX + movementThisFrame.x;
+    var bottomNextFrameY = bottomThisFrameY + movementThisFrame.y;
+
+    // No overlap between Main character and Collision Object.
+    if (bottomNextFrameY < collisionComponentTopY ||
+        topNextframeY > collisionComponentBottomY ||
+        leftNextframeX > collisionComponentRightX ||
+        rightNextframeX < collisionComponentLeftX) {
+      return;
+    }
+
+    // Collision bottom check
+    if (bottomNextFrameY >= collisionComponentTopY &&
+        bottomThisFrameY < collisionComponentTopY) {
+      collisionBottom = true;
+    }
+    // Collision top check
+    else if (topNextframeY <= collisionComponentBottomY &&
+        topThisFrameY > collisionComponentBottomY) {
+      collisionTop = true;
+    }
+    // Collision right check
+    else if (rightNextframeX >= collisionComponentLeftX &&
+        rightThisFrameX < collisionComponentLeftX) {
+      collisionRight = true;
+    }
+    // Collision left check
+    else if (leftNextframeX <= collisionComponentRightX &&
+        leftThisFrameX > collisionComponentRightX) {
+      collisionLeft = true;
+    }
+  }
+
+  // Adds all world CollisionObjects to $collisionObjects list for collision detection
+  void getCollisionComponents() {
+    collisionObjects.addAll(gameRef.world.children
+        .where((element) => element is CollisionObject)
+        .cast());
+  }
+
+  // If any collision occurs then collided is true
+  void updateCollided() {
+    if (collisionBottom || collisionLeft || collisionRight || collisionTop) {
+      collided = true;
+    }
+  }
+
+  // Resets all collision detection. Implemented at the beginning of each update frame.
+  void resetCollisions() {
+    collisionBottom = false;
+    collisionLeft = false;
+    collisionRight = false;
+    collisionTop = false;
   }
 }
