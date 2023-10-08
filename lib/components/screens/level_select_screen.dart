@@ -36,7 +36,7 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
               children: [
                 Container(
                   alignment: Alignment.center,
-                  width: 850,
+                  width: 750,
                   height: 200,
                   color: Color.fromARGB(43, 7, 255, 243),
                   child: ListView.builder(

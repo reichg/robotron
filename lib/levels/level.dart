@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flame/components.dart';
+import 'package:flame/geometry.dart';
 import 'package:flame_tiled/flame_tiled.dart';
 import 'package:flutter/material.dart';
 import 'package:robotron/components/Powerups/gun_powerup.dart';
@@ -10,6 +11,7 @@ import 'package:robotron/components/characters/character.dart';
 import 'package:robotron/components/characters/enemy_character.dart';
 import 'package:robotron/components/collision/collision_objects.dart';
 import 'package:robotron/components/joystick/right_joystick.dart';
+import 'package:robotron/components/line/line_component.dart';
 import 'package:robotron/components/screens/gameover_screen.dart';
 import 'package:robotron/robotron.dart';
 
@@ -29,6 +31,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   late TextComponent newRoundTextComponent;
   late TextComponent currentRoundTextComponent;
   late RectangleComponent healthBar;
+  late LineComponent visualPathToPlayerFromEnemy;
   late GunPowerup gunPowerup;
 
   // Game information
@@ -38,7 +41,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   int timerCountdownToStart = 3;
   int timeLeft = 45;
   int timeBetweenRounds = 5;
-  double enemyMoveSpeed = 70;
+  double enemyMoveSpeed = 50;
   int killCount = 0;
   int totalSpawned = 0;
 
@@ -52,6 +55,10 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   // Round information
   bool roundWin = false;
   int currentRound = 1;
+
+  // Will be used for zombie movement calculations
+  List<LineSegment> collisionBoundaries = [];
+  List<PositionComponent> collisionObjects = [];
 
   // Screen size calculations
   static final Size screenSize = Robotron.screenSize;
@@ -82,6 +89,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     createCharacter();
     createTextComponents();
     createGunPowerup();
+    getCollisionComponents();
+    getCollisionBoundaries();
 
     // Start timers
     startCountdown.start();
@@ -141,7 +150,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       // Controls enemy spawn time
       enemySpawnTimer.update(dt);
       enemySpawnTimer.onTick = () {
-        if (totalSpawned < 5) {
+        if (totalSpawned < 1) {
           createEnemyCharacter();
         }
       };
@@ -258,7 +267,9 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   // Reset game, remove enemies and bullets, stop timers, spawn count, ect
   void reset() {
     for (var child in gameRef.world.children) {
-      if (child is Bullet || child is EnemyCharacter) {
+      if (child is Bullet ||
+          child is EnemyCharacter ||
+          child is LineComponent) {
         child.removeFromParent();
       }
     }
@@ -397,5 +408,33 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       paint: Paint()..color = Colors.red.withOpacity(1),
     );
     add(healthBar);
+  }
+
+  // Adds all world CollisionObjects to $collisionObjects list for collision detection
+  void getCollisionComponents() {
+    collisionObjects.addAll(gameRef.world.children
+        .where((element) => element is CollisionObject)
+        .cast());
+  }
+
+  // Get collision boundaries for zombie movement calculation
+  void getCollisionBoundaries() {
+    for (final child in gameRef.world.children) {
+      if (child is CollisionObject) {
+        LineSegment right = LineSegment(
+            child.positionOfAnchor(Anchor.bottomRight),
+            child.positionOfAnchor(Anchor.topRight));
+        LineSegment left = LineSegment(
+            child.positionOfAnchor(Anchor.bottomLeft),
+            child.positionOfAnchor(Anchor.topLeft));
+        LineSegment bottom = LineSegment(
+            child.positionOfAnchor(Anchor.bottomLeft),
+            child.positionOfAnchor(Anchor.bottomRight));
+        LineSegment top = LineSegment(child.positionOfAnchor(Anchor.topLeft),
+            child.positionOfAnchor(Anchor.topRight));
+
+        collisionBoundaries.addAll([right, left, bottom, top]);
+      }
+    }
   }
 }
