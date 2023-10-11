@@ -379,6 +379,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   }
 
   void createEnemyCharacter() {
+    // must put coordinates back into spawn point.
     //coordinates.first, coordinates.last
     List<double> coordinates =
         _randomCoodinatePairInWorldbounds100PxFromMainCharacter(

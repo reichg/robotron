@@ -1,10 +1,8 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/geometry.dart';
-import 'package:pathfinding/core/node.dart';
 import 'package:robotron/components/bullet/bullet.dart';
 import 'package:robotron/components/characters/character.dart';
 import 'package:robotron/components/line/line_component.dart';
@@ -86,12 +84,11 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   @override
   void update(double dt) {
     super.update(dt);
-
     current = PlayerState.running;
     LineSegment? pathToPlayerLine =
         LineSegment(center, characterToChase.position);
     Vector2 direction = (characterToChase.position - position).normalized();
-    moveAlongPath(direction, pathToPlayerLine!, dt);
+    moveAlongPath(direction, pathToPlayerLine, dt);
 
     if (!isFacingLeft && direction[0] < 0) {
       flipHorizontallyAroundCenter();
