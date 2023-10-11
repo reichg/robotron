@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/geometry.dart';
 import 'package:flame_tiled/flame_tiled.dart';
+import 'package:pathfinding/core/grid.dart';
 import 'package:flutter/material.dart';
 import 'package:robotron/components/Powerups/gun_powerup.dart';
 import 'package:robotron/components/bullet/bullet.dart';
@@ -138,14 +139,14 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     if (gameStarted) {
       // Round timer
       gameTimer.update(dt);
-      gameTimer.onTick = () {
-        timeLeft -= 1;
-        timeLeftTextComponent.text = "Time Left: $timeLeft";
-        if (timeLeft == 0) {
-          gameTimer.stop();
-          gameOver = true;
-        }
-      };
+      // gameTimer.onTick = () {
+      //   timeLeft -= 1;
+      //   timeLeftTextComponent.text = "Time Left: $timeLeft";
+      //   if (timeLeft == 0) {
+      //     gameTimer.stop();
+      //     gameOver = true;
+      //   }
+      // };
 
       // Controls enemy spawn time
       enemySpawnTimer.update(dt);
@@ -378,13 +379,14 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   }
 
   void createEnemyCharacter() {
+    //coordinates.first, coordinates.last
     List<double> coordinates =
         _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
             characterLocation: gameRef.world.character.position);
     var enemyCharacter = EnemyCharacter(
         character: "Pink Man",
         anchor: Anchor.center,
-        position: Vector2(coordinates.first, coordinates.last),
+        position: Vector2(385, 170),
         characterToChase: character,
         moveSpeed: enemyMoveSpeed);
 
