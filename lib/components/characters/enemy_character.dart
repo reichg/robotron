@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -20,17 +21,25 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   String character;
   MainCharacter characterToChase;
   double moveSpeed;
+  AStarFinder aStarPathfinder;
 
   EnemyCharacter(
       {position,
       anchor,
       required this.character,
       required this.characterToChase,
-      required this.moveSpeed})
+      required this.moveSpeed,
+      required this.aStarPathfinder})
       : super(position: position, anchor: anchor);
 
   late Grid grid;
+  late final SpriteAnimation runningAnimation;
+  late LineComponent pathToMainCharacter;
+  late LineSegment pathToPlayerLine;
+  List<Point> path = [];
+
   AStarFinder aStarFinder = AStarFinder();
+  List<dynamic> nextMove = [];
 
   bool collisionBottom = false;
   bool collisionTop = false;
@@ -38,14 +47,13 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   bool collisionLeft = false;
   bool collided = false;
 
-  late final SpriteAnimation runningAnimation;
-  late LineComponent pathToMainCharacter;
-  late LineSegment pathToPlayerLine;
   bool isFacingLeft = false;
   final double stepTime = 0.05;
   LineSegment? collisionSegment;
   double delay = 0;
   bool turnedCorner = true;
+  AStarFinder pathfinder =
+      AStarFinder(dontCrossCorners: true, allowDiagonal: true);
 
   CollisionMovementChecker movementChecker = CollisionMovementChecker();
 
@@ -68,6 +76,8 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
     );
     pathToPlayerLine = LineSegment(center, characterToChase.center);
     gameRef.world.add(pathToMainCharacter);
+    grid = Grid(gameRef.world.grid.first.length, gameRef.world.grid.length,
+        gameRef.world.grid);
 
     return super.onLoad();
   }
@@ -84,19 +94,44 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   @override
   void update(double dt) {
     super.update(dt);
-    current = PlayerState.running;
-    LineSegment? pathToPlayerLine =
-        LineSegment(center, characterToChase.position);
-    Vector2 direction = (characterToChase.position - position).normalized();
-    moveAlongPath(direction, pathToPlayerLine, dt);
-
-    if (!isFacingLeft && direction[0] < 0) {
-      flipHorizontallyAroundCenter();
-      isFacingLeft = true;
+    List<int> currentMainCharacterPosition = [
+      (characterToChase.x.toInt() / 16).round(),
+      (characterToChase.y.toInt() / 16).round()
+    ];
+    if (path.isEmpty || path.last != currentMainCharacterPosition) {
+      // Recalculate the path when the AI reaches the current target or on startup
+      final startPoint =
+          Point(position.x.toInt() / 16, position.y.toInt() / 16);
+      final endPoint = Point(
+          characterToChase.x.toInt() / 16, characterToChase.y.toInt() / 16);
+      path = pathfinder.findPath(startPoint.x.round(), startPoint.y.round(),
+          endPoint.x.round(), endPoint.y.round(), grid.clone());
     }
-    if (isFacingLeft && direction[0] > 0) {
-      flipHorizontallyAroundCenter();
-      isFacingLeft = false;
+
+    if (path.isNotEmpty) {
+      // Move the AI towards the next step in the path
+      final nextStep = path[1];
+      List<List<int>> newPath = [];
+      print(path);
+
+      current = PlayerState.running;
+      LineSegment? pathToPlayerLine =
+          LineSegment(center, characterToChase.position);
+
+      // Vector2 direction =
+      //     (Vector2(nextStep[0].toDouble() * 16, nextStep[1].toDouble() * 16) -
+      //             position)
+      //         .normalized();
+      // moveAlongPath(direction, pathToPlayerLine, dt);
+
+      // if (!isFacingLeft && direction[0] < 0) {
+      //   flipHorizontallyAroundCenter();
+      //   isFacingLeft = true;
+      // }
+      // if (isFacingLeft && direction[0] > 0) {
+      //   flipHorizontallyAroundCenter();
+      //   isFacingLeft = false;
+      // }
     }
   }
 
@@ -128,23 +163,6 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   void moveAlongPath(Vector2 direction, LineSegment pathToPlayer, double dt) {
     final originalPosition = position.clone();
 
-    LineSegment? collision = getCollision(pathToPlayer);
-
-    if (collision != null) {
-      final distanceToFrom =
-          CustomizedLineSegment(characterToChase.position, collision.from)
-              .calculateDistance2();
-      final distanceToTo =
-          CustomizedLineSegment(characterToChase.position, collision.to)
-              .calculateDistance2();
-
-      if (distanceToFrom < distanceToTo) {
-        direction = ((collision.from) - position).normalized();
-      } else {
-        direction = ((collision.to) - position).normalized();
-      }
-    }
-
     final movementThisFrame = direction * dt * moveSpeed;
 
     movementChecker.checkMovement(
@@ -152,45 +170,5 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
         movementThisFrame: movementThisFrame,
         originalPosition: originalPosition,
         collisionObjects: gameRef.world.collisionObjects);
-  }
-
-  LineSegment? getCollision(LineSegment pathToPlayer) {
-    Vector2? nearestIntersection;
-    double? shortestLength;
-    LineSegment? collisionBoundary;
-
-    // To do
-    // Complete zombie pathfinding here.
-    for (final collisionBoundaryLine in gameRef.world.collisionBoundaries) {
-      List<Vector2?> intersectionPoints =
-          pathToPlayer.intersections(collisionBoundaryLine);
-
-      // Path to player Has intersection with this specific iteration of collisionboundaryline
-      if (intersectionPoints.isNotEmpty) {
-        // First iteration will be null each frame
-        if (nearestIntersection == null) {
-          nearestIntersection = intersectionPoints[0]!;
-          CustomizedLineSegment newLine =
-              CustomizedLineSegment(center, intersectionPoints[0]!);
-          shortestLength = newLine.calculateDistance2();
-        } else {
-          final lengthToThisPoint =
-              CustomizedLineSegment(center, intersectionPoints[0]!)
-                  .calculateDistance2();
-
-          // New shortest length
-          if (lengthToThisPoint < shortestLength!) {
-            shortestLength = lengthToThisPoint;
-            nearestIntersection = intersectionPoints[0]!;
-            collisionBoundary = collisionBoundaryLine;
-            return collisionBoundary;
-          } else {
-            collisionBoundary = collisionBoundaryLine;
-            return collisionBoundary;
-          }
-        }
-      }
-    }
-    return null;
   }
 }

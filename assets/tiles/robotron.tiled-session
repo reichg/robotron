@@ -23,10 +23,10 @@
                 3
             ],
             "scale": 2,
-            "selectedLayer": 0,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 337,
-                "y": 183.75
+                "x": 332.5,
+                "y": 179.5
             }
         },
         "robotron.tsx": {

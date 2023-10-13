@@ -5,7 +5,9 @@ import 'package:flame/components.dart';
 import 'package:flame/geometry.dart';
 import 'package:flame_tiled/flame_tiled.dart';
 import 'package:pathfinding/core/grid.dart';
+
 import 'package:flutter/material.dart';
+import 'package:pathfinding/finders/astar.dart';
 import 'package:robotron/components/Powerups/gun_powerup.dart';
 import 'package:robotron/components/bullet/bullet.dart';
 import 'package:robotron/components/characters/character.dart';
@@ -45,6 +47,10 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   double enemyMoveSpeed = 50;
   int killCount = 0;
   int totalSpawned = 0;
+  var grid = <List<int>>[];
+
+  // Pathfinder
+  AStarFinder pathfinder = AStarFinder();
 
   // All Game Timers
   Timer startCountdown = Timer(1, repeat: true, autoStart: false);
@@ -92,7 +98,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     createGunPowerup();
     getCollisionComponents();
     getCollisionBoundaries();
-
+    createGrid();
     // Start timers
     startCountdown.start();
     bulletSpawnTimer.start();
@@ -387,9 +393,10 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     var enemyCharacter = EnemyCharacter(
         character: "Pink Man",
         anchor: Anchor.center,
-        position: Vector2(385, 170),
+        position: Vector2(400, 170),
         characterToChase: character,
-        moveSpeed: enemyMoveSpeed);
+        moveSpeed: enemyMoveSpeed,
+        aStarPathfinder: pathfinder);
 
     add(enemyCharacter);
     totalSpawned += 1;
@@ -438,6 +445,26 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
 
         collisionBoundaries.addAll([right, left, bottom, top]);
       }
+    }
+  }
+
+  void createGrid() {
+    var map = level.tileMap.map;
+    var height = map.height;
+    var width = map.width;
+    TileLayer background =
+        level.tileMap.getLayer<TileLayer>("background") as TileLayer;
+    var tileData = background.tileData;
+    // Layer background = map.layerByName("background");
+    // print("$height, $width");
+    for (int i = 0; i < background.tileData!.length; i++) {
+      final row = <int>[];
+      for (int j = 0; j < background.tileData!.first.length; j++) {
+        var tile = tileData![i][j].tile == 24 ? 0 : 1;
+        row.add(tile);
+      }
+
+      grid.add(row);
     }
   }
 }
