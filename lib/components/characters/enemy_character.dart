@@ -36,7 +36,7 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   late final SpriteAnimation runningAnimation;
   late LineComponent pathToMainCharacter;
   late LineSegment pathToPlayerLine;
-  List<Point> path = [];
+  List<dynamic> path = [];
 
   AStarFinder aStarFinder = AStarFinder();
   List<dynamic> nextMove = [];
@@ -110,28 +110,29 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
 
     if (path.isNotEmpty) {
       // Move the AI towards the next step in the path
+      path.cast<List<List<double>>>;
       final nextStep = path[1];
-      List<List<int>> newPath = [];
       print(path);
-
+      
+      
       current = PlayerState.running;
       LineSegment? pathToPlayerLine =
           LineSegment(center, characterToChase.position);
 
-      // Vector2 direction =
-      //     (Vector2(nextStep[0].toDouble() * 16, nextStep[1].toDouble() * 16) -
-      //             position)
-      //         .normalized();
-      // moveAlongPath(direction, pathToPlayerLine, dt);
+      Vector2 direction =
+          (Vector2(nextStep[0].toDouble() * 16, nextStep[1].toDouble() * 16) -
+                  position)
+              .normalized();
+      moveAlongPath(direction, pathToPlayerLine, dt);
 
-      // if (!isFacingLeft && direction[0] < 0) {
-      //   flipHorizontallyAroundCenter();
-      //   isFacingLeft = true;
-      // }
-      // if (isFacingLeft && direction[0] > 0) {
-      //   flipHorizontallyAroundCenter();
-      //   isFacingLeft = false;
-      // }
+      if (!isFacingLeft && direction[0] < 0) {
+        flipHorizontallyAroundCenter();
+        isFacingLeft = true;
+      }
+      if (isFacingLeft && direction[0] > 0) {
+        flipHorizontallyAroundCenter();
+        isFacingLeft = false;
+      }
     }
   }
 

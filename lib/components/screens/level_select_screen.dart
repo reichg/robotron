@@ -1,5 +1,20 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:robotron/components/screens/gameplay_screen.dart';
+
+
+var pixelRatio = window.devicePixelRatio;
+
+ //Size in physical pixels
+var physicalScreenSize = window.physicalSize;
+var physicalWidth = physicalScreenSize.width;
+var physicalHeight = physicalScreenSize.height;
+
+//Size in logical pixels
+var logicalScreenSize = window.physicalSize / pixelRatio;
+var logicalWidth = logicalScreenSize.width;
+var logicalHeight = logicalScreenSize.height;
 
 class LevelSelectScreen extends StatefulWidget {
   const LevelSelectScreen({Key? key}) : super(key: key);
@@ -9,6 +24,7 @@ class LevelSelectScreen extends StatefulWidget {
 }
 
 class _LevelSelectScreenState extends State<LevelSelectScreen> {
+  
   static final levelNames = ["level-01", "level-02"];
   List<Image> levelImages = [];
   int _selectedIndex = 0;
