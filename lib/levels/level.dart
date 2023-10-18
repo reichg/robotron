@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/geometry.dart';
 import 'package:flame_tiled/flame_tiled.dart';
-import 'package:pathfinding/core/grid.dart';
 
 import 'package:flutter/material.dart';
 import 'package:pathfinding/finders/astar.dart';
@@ -457,9 +456,6 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   }
 
   void createGrid() {
-    var map = level.tileMap.map;
-    var height = map.height;
-    var width = map.width;
     TileLayer background =
         level.tileMap.getLayer<TileLayer>("background") as TileLayer;
     var tileData = background.tileData;

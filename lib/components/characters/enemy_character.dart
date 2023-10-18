@@ -8,7 +8,6 @@ import 'package:robotron/components/bullet/bullet.dart';
 import 'package:robotron/components/characters/character.dart';
 import 'package:robotron/components/line/line_component.dart';
 import 'package:robotron/robotron.dart';
-import 'package:robotron/utils/customized_line_segment.dart';
 import 'package:robotron/utils/movement_utils.dart';
 
 import 'package:pathfinding/finders/astar.dart';
