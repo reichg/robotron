@@ -44,7 +44,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   int timerCountdownToStart = 3;
   int timeLeft = 45;
   int timeBetweenRounds = 5;
-  double enemyMoveSpeed = 50;
+  double enemyMoveSpeed = 30;
   int killCount = 0;
   int totalSpawned = 0;
   var grid = <List<int>>[];
@@ -112,6 +112,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   void update(double dt) {
     super.update(dt);
 
+    clearLineComponents();
     // If gameover pause the engine
     if (gameOver) {
       gameRef.pauseEngine();
@@ -145,19 +146,19 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     if (gameStarted) {
       // Round timer
       gameTimer.update(dt);
-      // gameTimer.onTick = () {
-      //   timeLeft -= 1;
-      //   timeLeftTextComponent.text = "Time Left: $timeLeft";
-      //   if (timeLeft == 0) {
-      //     gameTimer.stop();
-      //     gameOver = true;
-      //   }
-      // };
+      gameTimer.onTick = () {
+        timeLeft -= 1;
+        timeLeftTextComponent.text = "Time Left: $timeLeft";
+        if (timeLeft == 0) {
+          gameTimer.stop();
+          gameOver = true;
+        }
+      };
 
       // Controls enemy spawn time
       enemySpawnTimer.update(dt);
       enemySpawnTimer.onTick = () {
-        if (totalSpawned < 1) {
+        if (totalSpawned < 5) {
           createEnemyCharacter();
         }
       };
@@ -237,7 +238,15 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     List<double> coordinates = [randomX, randomY];
     var distance = Vector2(coordinates.first, coordinates.last)
         .distanceTo(characterLocation);
-
+    for (var child in children) {
+      if (child is CollisionObject) {
+        if (child
+            .containsLocalPoint(Vector2(coordinates.first, coordinates.last))) {
+          return _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
+              characterLocation: characterLocation);
+        }
+      }
+    }
     if (distance > 125) {
       return coordinates;
     }
@@ -273,24 +282,23 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
 
   // Reset game, remove enemies and bullets, stop timers, spawn count, ect
   void reset() {
-    for (var child in gameRef.world.children) {
+    startCountdown.stop();
+    gameTimer.stop();
+    enemySpawnTimer.stop();
+    character.reset();
+    for (var child in children) {
       if (child is Bullet ||
           child is EnemyCharacter ||
           child is LineComponent) {
-        child.removeFromParent();
+        remove(child);
       }
     }
-    character.reset();
 
     timeLeft = 45;
     totalSpawned = 0;
     timerCountdownToStart = 3;
     timeBetweenRounds = 5;
     gameRef.world.timeLeftTextComponent.text = "Time Left: $timeLeft";
-
-    startCountdown.stop();
-    gameTimer.stop();
-    enemySpawnTimer.stop();
   }
 
   // Increase enemy move speed by 20 units and decrease enemy spawn time each round
@@ -298,7 +306,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     if (gameRef.world.enemySpawnTimer.limit - 0.259 > 0) {
       gameRef.world.enemySpawnTimer.limit -= 0.25;
     }
-    enemyMoveSpeed += 20;
+    enemyMoveSpeed += 40;
   }
 
   // Create all text components in the game (score, health, countdown, and time left)
@@ -393,7 +401,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     var enemyCharacter = EnemyCharacter(
         character: "Pink Man",
         anchor: Anchor.center,
-        position: Vector2(400, 170),
+        position: Vector2(coordinates.first, coordinates.last),
         characterToChase: character,
         moveSpeed: enemyMoveSpeed,
         aStarPathfinder: pathfinder);
@@ -455,8 +463,6 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     TileLayer background =
         level.tileMap.getLayer<TileLayer>("background") as TileLayer;
     var tileData = background.tileData;
-    // Layer background = map.layerByName("background");
-    // print("$height, $width");
     for (int i = 0; i < background.tileData!.length; i++) {
       final row = <int>[];
       for (int j = 0; j < background.tileData!.first.length; j++) {
@@ -465,6 +471,14 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       }
 
       grid.add(row);
+    }
+  }
+
+  void clearLineComponents() {
+    for (var child in children) {
+      if (child is LineComponent) {
+        remove(child);
+      }
     }
   }
 }

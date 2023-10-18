@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 
 class LineComponent extends ShapeComponent {
   LineSegment segment;
-  // NotifyingVector2 _position;
-  double angle = 0.0;
   Paint paint = Paint()..color = Colors.red;
 
   final DEFAULT_LINE = LineSegment(Vector2(0.0, 0.0), Vector2(1.0, 0.0));

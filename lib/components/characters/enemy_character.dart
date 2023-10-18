@@ -36,7 +36,8 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   late final SpriteAnimation runningAnimation;
   late LineComponent pathToMainCharacter;
   late LineSegment pathToPlayerLine;
-  List<dynamic> path = [];
+  List<List<double>> path = [];
+  List<LineComponent> visualizedPath = [];
 
   AStarFinder aStarFinder = AStarFinder();
   List<dynamic> nextMove = [];
@@ -59,7 +60,7 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
 
   @override
   // ignore: overridden_fields
-  bool debugMode = true;
+  // bool debugMode = true;
 
   @override
   FutureOr<void> onLoad() {
@@ -94,6 +95,8 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   @override
   void update(double dt) {
     super.update(dt);
+    removeLineComponents();
+    path.clear();
     List<int> currentMainCharacterPosition = [
       (characterToChase.x.toInt() / 16).round(),
       (characterToChase.y.toInt() / 16).round()
@@ -104,17 +107,24 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
           Point(position.x.toInt() / 16, position.y.toInt() / 16);
       final endPoint = Point(
           characterToChase.x.toInt() / 16, characterToChase.y.toInt() / 16);
-      path = pathfinder.findPath(startPoint.x.round(), startPoint.y.round(),
-          endPoint.x.round(), endPoint.y.round(), grid.clone());
+      List<dynamic> tempPath = pathfinder.findPath(
+          startPoint.x.round(),
+          startPoint.y.round(),
+          endPoint.x.round(),
+          endPoint.y.round(),
+          grid.clone());
+
+      convertAndAddCoordinatesToPath(tempPath, path);
     }
 
     if (path.isNotEmpty) {
       // Move the AI towards the next step in the path
-      path.cast<List<List<double>>>;
+      addAStarPathVisualization(path);
+
+      // List<List<double>> pathCasted = path;
       final nextStep = path[1];
-      print(path);
-      
-      
+      // addAStarPathVisualization(path);
+
       current = PlayerState.running;
       LineSegment? pathToPlayerLine =
           LineSegment(center, characterToChase.position);
@@ -171,5 +181,45 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
         movementThisFrame: movementThisFrame,
         originalPosition: originalPosition,
         collisionObjects: gameRef.world.collisionObjects);
+  }
+
+  void removeLineComponents() {
+    for (final child in gameRef.world.children) {
+      if (child is LineComponent) {
+        gameRef.world.remove(child);
+      }
+    }
+  }
+
+  void addAStarPathVisualization(List<List<double>> path) {
+    int pathLength = path.length;
+
+    for (int i = 0; i < pathLength - 2; i++) {
+      List<double> from = path[i];
+      List<double> to = path[i + 1];
+      LineComponent newComponent = LineComponent(LineSegment(
+          Vector2(from.first * 16, from.last * 16),
+          Vector2(to.first * 16, to.last * 16)));
+      gameRef.world.add(newComponent);
+    }
+    LineComponent lastSegment = LineComponent(
+      LineSegment(
+        Vector2(path.last.first * 16, path.last.last * 16),
+        Vector2(characterToChase.center.x, characterToChase.center.y),
+      ),
+    );
+    gameRef.world.add(lastSegment);
+  }
+
+  void convertAndAddCoordinatesToPath(List tempPath, List path) {
+    for (List<dynamic> thing in tempPath) {
+      List<int> coordinates = thing.map((e) => e as int).toList();
+      List<double> myDoubleList = [];
+      coordinates.forEach((element) {
+        myDoubleList.add(element.toDouble());
+      });
+
+      path.add(myDoubleList);
+    }
   }
 }

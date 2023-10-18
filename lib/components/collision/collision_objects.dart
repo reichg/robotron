@@ -8,7 +8,7 @@ class CollisionObject extends PositionComponent {
       : super(size: size, position: position);
 
   // @override
-  bool debugMode = true;
+  // bool debugMode = true;
 
   @override
   int priority = 10;
