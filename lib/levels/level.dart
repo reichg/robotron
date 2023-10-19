@@ -2,14 +2,18 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flame/components.dart';
+import 'package:flame/geometry.dart';
 import 'package:flame_tiled/flame_tiled.dart';
+
 import 'package:flutter/material.dart';
+import 'package:pathfinding/finders/astar.dart';
 import 'package:robotron/components/Powerups/gun_powerup.dart';
 import 'package:robotron/components/bullet/bullet.dart';
 import 'package:robotron/components/characters/character.dart';
 import 'package:robotron/components/characters/enemy_character.dart';
 import 'package:robotron/components/collision/collision_objects.dart';
 import 'package:robotron/components/joystick/right_joystick.dart';
+import 'package:robotron/components/line/line_component.dart';
 import 'package:robotron/components/screens/gameover_screen.dart';
 import 'package:robotron/robotron.dart';
 
@@ -29,7 +33,9 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   late TextComponent newRoundTextComponent;
   late TextComponent currentRoundTextComponent;
   late RectangleComponent healthBar;
+  late LineComponent visualPathToPlayerFromEnemy;
   late GunPowerup gunPowerup;
+  late int worldTileSize;
 
   // Game information
   bool gameStarted = false;
@@ -38,9 +44,14 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   int timerCountdownToStart = 3;
   int timeLeft = 45;
   int timeBetweenRounds = 5;
-  double enemyMoveSpeed = 70;
+  double enemyMoveSpeed = 30;
   int killCount = 0;
   int totalSpawned = 0;
+  var grid = <List<int>>[];
+
+  // Pathfinder
+  AStarFinder pathfinder =
+      AStarFinder(dontCrossCorners: true, allowDiagonal: true);
 
   // All Game Timers
   Timer startCountdown = Timer(1, repeat: true, autoStart: false);
@@ -52,6 +63,10 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   // Round information
   bool roundWin = false;
   int currentRound = 1;
+
+  // Will be used for zombie movement calculations
+  List<LineSegment> collisionBoundaries = [];
+  List<PositionComponent> collisionObjects = [];
 
   // Screen size calculations
   static final Size screenSize = Robotron.screenSize;
@@ -72,7 +87,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   FutureOr<void> onLoad() async {
     level = await TiledComponent.load(
       "$levelName.tmx",
-      Vector2.all(16),
+      Vector2.all(levelName == "level-01" ? 8 : 16),
     );
     add(level);
 
@@ -82,7 +97,11 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     createCharacter();
     createTextComponents();
     createGunPowerup();
-
+    getCollisionComponents();
+    getCollisionBoundaries();
+    createGrid();
+    addGridToMap(grid);
+    worldTileSize = levelName == "level-01" ? 8 : 16;
     // Start timers
     startCountdown.start();
     bulletSpawnTimer.start();
@@ -96,6 +115,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   void update(double dt) {
     super.update(dt);
 
+    clearLineComponents();
     // If gameover pause the engine
     if (gameOver) {
       gameRef.pauseEngine();
@@ -221,7 +241,15 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     List<double> coordinates = [randomX, randomY];
     var distance = Vector2(coordinates.first, coordinates.last)
         .distanceTo(characterLocation);
-
+    for (var child in children) {
+      if (child is CollisionObject) {
+        if (child
+            .containsLocalPoint(Vector2(coordinates.first, coordinates.last))) {
+          return _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
+              characterLocation: characterLocation);
+        }
+      }
+    }
     if (distance > 125) {
       return coordinates;
     }
@@ -257,22 +285,23 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
 
   // Reset game, remove enemies and bullets, stop timers, spawn count, ect
   void reset() {
-    for (var child in gameRef.world.children) {
-      if (child is Bullet || child is EnemyCharacter) {
-        child.removeFromParent();
+    startCountdown.stop();
+    gameTimer.stop();
+    enemySpawnTimer.stop();
+    character.reset();
+    for (var child in children) {
+      if (child is Bullet ||
+          child is EnemyCharacter ||
+          child is LineComponent) {
+        remove(child);
       }
     }
-    character.reset();
 
     timeLeft = 45;
     totalSpawned = 0;
     timerCountdownToStart = 3;
     timeBetweenRounds = 5;
     gameRef.world.timeLeftTextComponent.text = "Time Left: $timeLeft";
-
-    startCountdown.stop();
-    gameTimer.stop();
-    enemySpawnTimer.stop();
   }
 
   // Increase enemy move speed by 20 units and decrease enemy spawn time each round
@@ -280,7 +309,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     if (gameRef.world.enemySpawnTimer.limit - 0.259 > 0) {
       gameRef.world.enemySpawnTimer.limit -= 0.25;
     }
-    enemyMoveSpeed += 20;
+    enemyMoveSpeed += 40;
   }
 
   // Create all text components in the game (score, health, countdown, and time left)
@@ -367,6 +396,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   }
 
   void createEnemyCharacter() {
+    // must put coordinates back into spawn point.
+    //coordinates.first, coordinates.last
     List<double> coordinates =
         _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
             characterLocation: gameRef.world.character.position);
@@ -375,7 +406,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
         anchor: Anchor.center,
         position: Vector2(coordinates.first, coordinates.last),
         characterToChase: character,
-        moveSpeed: enemyMoveSpeed);
+        moveSpeed: enemyMoveSpeed,
+        aStarPathfinder: pathfinder);
 
     add(enemyCharacter);
     totalSpawned += 1;
@@ -397,5 +429,95 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       paint: Paint()..color = Colors.red.withOpacity(1),
     );
     add(healthBar);
+  }
+
+  // Adds all world CollisionObjects to $collisionObjects list for collision detection
+  void getCollisionComponents() {
+    collisionObjects.addAll(gameRef.world.children
+        .where((element) => element is CollisionObject)
+        .cast());
+  }
+
+  // Get collision boundaries for zombie movement calculation
+  void getCollisionBoundaries() {
+    for (final child in gameRef.world.children) {
+      if (child is CollisionObject) {
+        LineSegment right = LineSegment(
+            child.positionOfAnchor(Anchor.bottomRight),
+            child.positionOfAnchor(Anchor.topRight));
+        LineSegment left = LineSegment(
+            child.positionOfAnchor(Anchor.bottomLeft),
+            child.positionOfAnchor(Anchor.topLeft));
+        LineSegment bottom = LineSegment(
+            child.positionOfAnchor(Anchor.bottomLeft),
+            child.positionOfAnchor(Anchor.bottomRight));
+        LineSegment top = LineSegment(child.positionOfAnchor(Anchor.topLeft),
+            child.positionOfAnchor(Anchor.topRight));
+
+        collisionBoundaries.addAll([right, left, bottom, top]);
+      }
+    }
+  }
+
+  void createGrid() {
+    int walkableTile = getWalkableTileInteger(levelName);
+    RenderableTiledMap tileMap = level.tileMap;
+    TileLayer background =
+        level.tileMap.getLayer<TileLayer>("background") as TileLayer;
+    ObjectGroup collisionObjects =
+        level.tileMap.getLayer<ObjectGroup>("collisionObjects") as ObjectGroup;
+    var collisionObjectsTileData = collisionObjects;
+    print(
+        "${collisionObjectsTileData.objects.first.x}, ${collisionObjectsTileData.objects.first.x}");
+
+    var tileData = background.tileData;
+    for (int i = 0; i < background.tileData!.length; i++) {
+      final row = <int>[];
+      for (int j = 0; j < background.tileData!.first.length; j++) {
+        var tile = tileData![i][j].tile == walkableTile ? 0 : 1;
+        row.add(tile);
+      }
+
+      grid.add(row);
+    }
+  }
+
+  // void addObjectsToGrid(RenderableTiledMap tiledMap, List<List<int>> grid) {
+  //   // Get the ObjectLayer from the Tiled map
+  //   ObjectGroup collisionObjects =
+  //       level.tileMap.getLayer<ObjectGroup>("collisionObjects") as ObjectGroup;
+
+  //   for (final obj in collisionObjects.objects) {
+  //     final gridX = (obj.x / level.tileMap.map.tileWidth).round();
+  //     final gridY = (obj.y / level.tileMap.map.tileHeight).round();
+
+  //     // Check if the object is within the grid boundaries
+
+  //     // Set the grid value to a specific number to represent the object
+  //     grid[gridY][gridX] = 1; // You can use any value to represent objects
+  //   }
+  // }
+
+  void clearLineComponents() {
+    for (var child in children) {
+      if (child is LineComponent) {
+        remove(child);
+      }
+    }
+  }
+
+  void addGridToMap(List<List<int>> grid) {
+    print(grid);
+  }
+
+  int getWalkableTileInteger(String levelName) {
+    switch (levelName) {
+      case "level-01":
+        return 118;
+      case "level-02":
+        return 24;
+      default:
+    }
+    return 0;
   }
 }
