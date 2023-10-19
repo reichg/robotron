@@ -17,9 +17,16 @@ enum PlayerState { running }
 
 class EnemyCharacter extends SpriteAnimationGroupComponent
     with HasGameRef<Robotron>, CollisionCallbacks {
+  //This character
   String character;
+
+  // Typically the main character will be the character to chase from character.dart
   MainCharacter characterToChase;
+
+  // Zombie movement speed
   double moveSpeed;
+
+  // Pathfinder to get shortest path
   AStarFinder aStarPathfinder;
 
   EnemyCharacter(
@@ -33,27 +40,19 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
 
   late Grid grid;
   late final SpriteAnimation runningAnimation;
-  late LineComponent pathToMainCharacter;
+
+  late LineComponent pathToMainCharacterVisualization;
   late LineSegment pathToPlayerLine;
   List<List<double>> path = [];
   List<LineComponent> visualizedPath = [];
 
-  AStarFinder aStarFinder = AStarFinder();
   List<dynamic> nextMove = [];
-
-  bool collisionBottom = false;
-  bool collisionTop = false;
-  bool collisionRight = false;
-  bool collisionLeft = false;
-  bool collided = false;
 
   bool isFacingLeft = false;
   final double stepTime = 0.05;
   LineSegment? collisionSegment;
   double delay = 0;
   bool turnedCorner = true;
-  AStarFinder pathfinder =
-      AStarFinder(dontCrossCorners: true, allowDiagonal: true);
 
   CollisionMovementChecker movementChecker = CollisionMovementChecker();
 
@@ -68,14 +67,14 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
       RectangleHitbox(
         anchor: Anchor.center,
         position: Vector2(width / 2, height / 2),
-        size: Vector2.all(16),
+        size: Vector2.all(8),
       ),
     );
-    pathToMainCharacter = LineComponent(
+    pathToMainCharacterVisualization = LineComponent(
       LineSegment(center, characterToChase.center),
     );
     pathToPlayerLine = LineSegment(center, characterToChase.center);
-    gameRef.world.add(pathToMainCharacter);
+    gameRef.world.add(pathToMainCharacterVisualization);
     grid = Grid(gameRef.world.grid.first.length, gameRef.world.grid.length,
         gameRef.world.grid);
 
@@ -85,7 +84,7 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if (other is Bullet) {
-      pathToMainCharacter.removeFromParent();
+      pathToMainCharacterVisualization.removeFromParent();
       removeFromParent();
     }
     super.onCollision(intersectionPoints, other);
@@ -97,16 +96,17 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
     removeLineComponents();
     path.clear();
     List<int> currentMainCharacterPosition = [
-      (characterToChase.x.toInt() / 16).round(),
-      (characterToChase.y.toInt() / 16).round()
+      (characterToChase.x.toInt() / gameRef.world.worldTileSize).round(),
+      (characterToChase.y.toInt() / gameRef.world.worldTileSize).round()
     ];
     if (path.isEmpty || path.last != currentMainCharacterPosition) {
       // Recalculate the path when the AI reaches the current target or on startup
-      final startPoint =
-          Point(position.x.toInt() / 16, position.y.toInt() / 16);
+      final startPoint = Point(position.x.toInt() / gameRef.world.worldTileSize,
+          position.y.toInt() / gameRef.world.worldTileSize);
       final endPoint = Point(
-          characterToChase.x.toInt() / 16, characterToChase.y.toInt() / 16);
-      List<dynamic> tempPath = pathfinder.findPath(
+          characterToChase.x.toInt() / gameRef.world.worldTileSize,
+          characterToChase.y.toInt() / gameRef.world.worldTileSize);
+      List<dynamic> tempPath = aStarPathfinder.findPath(
           startPoint.x.round(),
           startPoint.y.round(),
           endPoint.x.round(),
@@ -125,14 +125,13 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
       // addAStarPathVisualization(path);
 
       current = PlayerState.running;
-      LineSegment? pathToPlayerLine =
-          LineSegment(center, characterToChase.position);
 
-      Vector2 direction =
-          (Vector2(nextStep[0].toDouble() * 16, nextStep[1].toDouble() * 16) -
-                  position)
-              .normalized();
-      moveAlongPath(direction, pathToPlayerLine, dt);
+      Vector2 direction = (Vector2(
+                  nextStep[0].toDouble() * gameRef.world.worldTileSize,
+                  nextStep[1].toDouble() * gameRef.world.worldTileSize) -
+              position)
+          .normalized();
+      moveAlongPath(direction, dt);
 
       if (!isFacingLeft && direction[0] < 0) {
         flipHorizontallyAroundCenter();
@@ -170,7 +169,7 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
 
   // Controls path of zombie
   // Need to implement pathing to edge of collision object
-  void moveAlongPath(Vector2 direction, LineSegment pathToPlayer, double dt) {
+  void moveAlongPath(Vector2 direction, double dt) {
     final originalPosition = position.clone();
 
     final movementThisFrame = direction * dt * moveSpeed;
@@ -197,13 +196,16 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
       List<double> from = path[i];
       List<double> to = path[i + 1];
       LineComponent newComponent = LineComponent(LineSegment(
-          Vector2(from.first * 16, from.last * 16),
-          Vector2(to.first * 16, to.last * 16)));
+          Vector2(from.first * gameRef.world.worldTileSize,
+              from.last * gameRef.world.worldTileSize),
+          Vector2(to.first * gameRef.world.worldTileSize,
+              to.last * gameRef.world.worldTileSize)));
       gameRef.world.add(newComponent);
     }
     LineComponent lastSegment = LineComponent(
       LineSegment(
-        Vector2(path.last.first * 16, path.last.last * 16),
+        Vector2(path.last.first * gameRef.world.worldTileSize,
+            path.last.last * gameRef.world.worldTileSize),
         Vector2(characterToChase.center.x, characterToChase.center.y),
       ),
     );

@@ -14,8 +14,8 @@
             "scale": 2,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 320,
-                "y": 183.75
+                "x": 318.5,
+                "y": 274
             }
         },
         "level-02.tmx": {
@@ -23,10 +23,10 @@
                 3
             ],
             "scale": 2,
-            "selectedLayer": 2,
+            "selectedLayer": 0,
             "viewCenter": {
-                "x": 332.5,
-                "y": 179.5
+                "x": 331,
+                "y": 178
             }
         },
         "robotron.tsx": {
@@ -35,6 +35,10 @@
         }
     },
     "last.imagePath": "G:/CodingStuff/flutter/robotron/assets/images/Terrain",
+    "last.worldFilePath": "G:/CodingStuff/flutter/robotron/assets/worlds",
+    "loadedWorlds": [
+        "G:/CodingStuff/flutter/robotron/assets/worlds/world2.world"
+    ],
     "map.height": 23,
     "map.lastUsedFormat": "tmx",
     "map.tileHeight": 16,

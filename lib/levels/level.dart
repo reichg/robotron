@@ -35,6 +35,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   late RectangleComponent healthBar;
   late LineComponent visualPathToPlayerFromEnemy;
   late GunPowerup gunPowerup;
+  late int worldTileSize;
 
   // Game information
   bool gameStarted = false;
@@ -49,7 +50,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   var grid = <List<int>>[];
 
   // Pathfinder
-  AStarFinder pathfinder = AStarFinder();
+  AStarFinder pathfinder =
+      AStarFinder(dontCrossCorners: true, allowDiagonal: true);
 
   // All Game Timers
   Timer startCountdown = Timer(1, repeat: true, autoStart: false);
@@ -85,7 +87,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   FutureOr<void> onLoad() async {
     level = await TiledComponent.load(
       "$levelName.tmx",
-      Vector2.all(16),
+      Vector2.all(levelName == "level-01" ? 8 : 16),
     );
     add(level);
 
@@ -98,6 +100,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     getCollisionComponents();
     getCollisionBoundaries();
     createGrid();
+    addGridToMap(grid);
+    worldTileSize = levelName == "level-01" ? 8 : 16;
     // Start timers
     startCountdown.start();
     bulletSpawnTimer.start();
@@ -456,13 +460,21 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   }
 
   void createGrid() {
+    int walkableTile = getWalkableTileInteger(levelName);
+    RenderableTiledMap tileMap = level.tileMap;
     TileLayer background =
         level.tileMap.getLayer<TileLayer>("background") as TileLayer;
+    ObjectGroup collisionObjects =
+        level.tileMap.getLayer<ObjectGroup>("collisionObjects") as ObjectGroup;
+    var collisionObjectsTileData = collisionObjects;
+    print(
+        "${collisionObjectsTileData.objects.first.x}, ${collisionObjectsTileData.objects.first.x}");
+
     var tileData = background.tileData;
     for (int i = 0; i < background.tileData!.length; i++) {
       final row = <int>[];
       for (int j = 0; j < background.tileData!.first.length; j++) {
-        var tile = tileData![i][j].tile == 24 ? 0 : 1;
+        var tile = tileData![i][j].tile == walkableTile ? 0 : 1;
         row.add(tile);
       }
 
@@ -470,11 +482,42 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     }
   }
 
+  // void addObjectsToGrid(RenderableTiledMap tiledMap, List<List<int>> grid) {
+  //   // Get the ObjectLayer from the Tiled map
+  //   ObjectGroup collisionObjects =
+  //       level.tileMap.getLayer<ObjectGroup>("collisionObjects") as ObjectGroup;
+
+  //   for (final obj in collisionObjects.objects) {
+  //     final gridX = (obj.x / level.tileMap.map.tileWidth).round();
+  //     final gridY = (obj.y / level.tileMap.map.tileHeight).round();
+
+  //     // Check if the object is within the grid boundaries
+
+  //     // Set the grid value to a specific number to represent the object
+  //     grid[gridY][gridX] = 1; // You can use any value to represent objects
+  //   }
+  // }
+
   void clearLineComponents() {
     for (var child in children) {
       if (child is LineComponent) {
         remove(child);
       }
     }
+  }
+
+  void addGridToMap(List<List<int>> grid) {
+    print(grid);
+  }
+
+  int getWalkableTileInteger(String levelName) {
+    switch (levelName) {
+      case "level-01":
+        return 118;
+      case "level-02":
+        return 24;
+      default:
+    }
+    return 0;
   }
 }

@@ -72,7 +72,7 @@ class MainCharacter extends SpriteAnimationGroupComponent
         ),
       );
       health -= 25;
-      other.pathToMainCharacter.removeFromParent();
+      other.pathToMainCharacterVisualization.removeFromParent();
       other.removeFromParent();
       if (health < 0) {
         health = 0;
