@@ -44,7 +44,8 @@ class Robotron extends FlameGame {
       height: 360,
     );
     cam.viewfinder.anchor = Anchor.topLeft;
-
+    print(
+        "height: $deviceHeight, width: $deviceWidth, aspect ratio: $aspectRatio");
     addAll([
       cam,
       world,

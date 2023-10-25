@@ -29,7 +29,7 @@
 </data>
  </layer>
  <objectgroup id="2" name="SpawnPoints">
-  <object id="1" name="Character" type="Character" x="89.039" y="67.39" width="31.6568" height="42.6833"/>
+  <object id="1" name="Character" type="Character" x="155.539" y="98.89" width="31.6568" height="42.6833"/>
  </objectgroup>
  <objectgroup id="3" name="collisionObjects">
   <object id="39" x="336.5" y="143.5" width="31.5" height="48.5"/>

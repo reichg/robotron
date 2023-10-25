@@ -38,9 +38,13 @@ class Bullet extends SpriteComponent
       removeFromParent();
     }
     if (other is EnemyCharacter) {
-      gameRef.world.character.score += 1;
-      gameRef.world.scoreTextComponent.text =
-          "Score: ${gameRef.world.character.score.toString()}";
+      removeFromParent();
+      gameRef.world.killCountTotal += 1;
+      gameRef.world.killCountThisRound += 1;
+      gameRef.world.killCountTotalComponent.text =
+          "Kills: ${gameRef.world.killCountTotal.toString()}";
+      gameRef.world.killCountThisRoundComponent.text =
+          "Round Kills: ${gameRef.world.killCountThisRound.toString()}";
     }
     super.onCollisionStart(intersectionPoints, other);
   }

@@ -18,9 +18,20 @@ class PauseButton extends StatelessWidget {
       children: [
         Positioned(
           bottom: (deviceHeight / 2) - (deviceHeight * 0.35),
-          left: (deviceWidth / 2) - 320 - (deviceWidth * 0.067),
+          left: (deviceWidth / 2) - 320 - (deviceWidth * 0.075),
           child: ElevatedButton(
-            child: Text("Pause"),
+            child: Text(
+              "Pause",
+              style: TextStyle(
+                  fontFamily: "Playfair",
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
+            ),
+            style: ButtonStyle(
+              backgroundColor: MaterialStateColor.resolveWith(
+                (states) => Color.fromARGB(255, 179, 76, 20),
+              ),
+            ),
             onPressed: () {
               gameRef.pauseEngine();
               gameRef.overlays.add(PauseMenu.ID);

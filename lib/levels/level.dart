@@ -26,12 +26,13 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   late TiledComponent level;
   late MainCharacter character;
   late RightJoystick rightJoystick;
-  late TextComponent scoreTextComponent;
   late TextComponent healthTextComponent;
   late TextComponent countdownTextComponent;
   late TextComponent timeLeftTextComponent;
   late TextComponent newRoundTextComponent;
   late TextComponent currentRoundTextComponent;
+  late TextComponent killCountTotalComponent;
+  late TextComponent killCountThisRoundComponent;
   late RectangleComponent healthBar;
   late LineComponent visualPathToPlayerFromEnemy;
   late GunPowerup gunPowerup;
@@ -45,8 +46,10 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   int timeLeft = 45;
   int timeBetweenRounds = 5;
   double enemyMoveSpeed = 30;
-  int killCount = 0;
+  int killCountTotal = 0;
+  int killCountThisRound = 0;
   int totalSpawned = 0;
+  int spawnLimit = 10;
   var grid = <List<int>>[];
 
   // Pathfinder
@@ -75,22 +78,26 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   final double deviceHeight = Robotron.deviceHeight;
 
   // Viewport coordinates
-  Vector2 bottomLeft = Vector2(63, 304);
-  Vector2 topRight = Vector2(576, 47);
+  late Vector2 bottomLeft;
+  late Vector2 topRight;
 
   Random rnd = Random();
 
   // @override
-  // bool debugMode = true;
+  bool debugMode = true;
 
   @override
   FutureOr<void> onLoad() async {
     level = await TiledComponent.load(
       "$levelName.tmx",
-      Vector2.all(levelName == "level-01" ? 8 : 16),
+      Vector2.all(16),
     );
     add(level);
 
+    topRight = level.positionOfAnchor(Anchor.topRight);
+
+    bottomLeft = level.positionOfAnchor(Anchor.bottomLeft);
+    print("top right: $topRight, bottom left: $bottomLeft");
     // Create components
     createCollisionObjects();
     createHealthBar();
@@ -100,8 +107,9 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     getCollisionComponents();
     getCollisionBoundaries();
     createGrid();
-    addGridToMap(grid);
-    worldTileSize = levelName == "level-01" ? 8 : 16;
+
+    // addGridToMap(grid);
+    worldTileSize = 16;
     // Start timers
     startCountdown.start();
     bulletSpawnTimer.start();
@@ -161,13 +169,13 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       // Controls enemy spawn time
       enemySpawnTimer.update(dt);
       enemySpawnTimer.onTick = () {
-        if (totalSpawned < 5) {
+        if (totalSpawned < spawnLimit) {
           createEnemyCharacter();
         }
       };
 
       // Controls when a round is won
-      if (gameRef.world.character.score == 1) {
+      if (killCountThisRound == 5) {
         roundWin = true;
       }
 
@@ -224,17 +232,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     }
   }
 
-  // Get random coordinate pair within the playable world bounds
-  List<double> _randomCoodinatePairInWorldbounds() {
-    double randomX = 66 + rnd.nextInt(545 - 63).toDouble();
-    double randomY = 44 + rnd.nextInt(304 - 44).toDouble();
-    List<double> coordinates = [randomX, randomY];
-
-    return coordinates;
-  }
-
   // Get position for enemy spawn that is 125 units away and in playable world bounds
-  List<double> _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
+  List<double> _randomCoodinatePairInWorldbounds125PxFromMainCharacter(
       {required Vector2 characterLocation}) {
     double randomX = 66 + rnd.nextInt(545 - 66).toDouble();
     double randomY = 44 + rnd.nextInt(304 - 44).toDouble();
@@ -245,16 +244,17 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       if (child is CollisionObject) {
         if (child
             .containsLocalPoint(Vector2(coordinates.first, coordinates.last))) {
-          return _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
+          return _randomCoodinatePairInWorldbounds125PxFromMainCharacter(
               characterLocation: characterLocation);
         }
       }
     }
     if (distance > 125) {
+      // print(coordinates);
       return coordinates;
     }
 
-    return _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
+    return _randomCoodinatePairInWorldbounds125PxFromMainCharacter(
         characterLocation: characterLocation);
   }
 
@@ -296,12 +296,14 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
         remove(child);
       }
     }
-
+    killCountThisRound = 0;
     timeLeft = 45;
     totalSpawned = 0;
     timerCountdownToStart = 3;
     timeBetweenRounds = 5;
     gameRef.world.timeLeftTextComponent.text = "Time Left: $timeLeft";
+    gameRef.world.killCountThisRoundComponent.text =
+        "Round Kills: ${killCountThisRound.toString()}";
   }
 
   // Increase enemy move speed by 20 units and decrease enemy spawn time each round
@@ -309,14 +311,28 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     if (gameRef.world.enemySpawnTimer.limit - 0.259 > 0) {
       gameRef.world.enemySpawnTimer.limit -= 0.25;
     }
-    enemyMoveSpeed += 40;
+    if (enemyMoveSpeed < 50) {
+      enemyMoveSpeed += 5;
+    }
+    if (spawnLimit < 25) {
+      spawnLimit += 2;
+    }
   }
 
   // Create all text components in the game (score, health, countdown, and time left)
   void createTextComponents() {
-    scoreTextComponent = TextComponent(
-        text: "Score: 0", anchor: Anchor.topLeft, position: Vector2(70, 10));
-    add(scoreTextComponent);
+    killCountTotalComponent = TextComponent(
+        text: "Kills: $killCountTotal",
+        anchor: Anchor.topLeft,
+        position: Vector2(70, 10));
+    add(killCountTotalComponent);
+
+    killCountThisRoundComponent = TextComponent(
+        text: "Round Kills: $killCountThisRound",
+        anchor: Anchor.topLeft,
+        position:
+            Vector2(topRight.x - ((topRight.x - bottomLeft.x) / 2) + 30, 320));
+    add(killCountThisRoundComponent);
 
     healthTextComponent = TextComponent(
       text: "Health: 100%",
@@ -328,7 +344,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     currentRoundTextComponent = TextComponent(
       text: "Round: 0",
       anchor: Anchor.topCenter,
-      position: Vector2(topRight.x - ((topRight.x - bottomLeft.x) / 2), 320),
+      position:
+          Vector2(topRight.x - ((topRight.x - bottomLeft.x) / 2) - 100, 320),
     );
     add(currentRoundTextComponent);
 
@@ -343,7 +360,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     add(countdownTextComponent);
 
     timeLeftTextComponent = TextComponent(
-      text: "Time Left: 5",
+      text: "Time Left: $timeLeft",
       anchor: Anchor.center,
       position:
           Vector2(topRight.x - ((topRight.x - bottomLeft.x) / 2) - 25, 15),
@@ -367,13 +384,15 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
 
   // Create gun powerup and add to game
   void createGunPowerup() {
-    List<double> gunPowerUpRandomCoords = _randomCoodinatePairInWorldbounds();
+    List<double> gunPowerUpRandomCoords =
+        _randomCoodinatePairInWorldbounds125PxFromMainCharacter(
+            characterLocation: character.position);
     gunPowerup = GunPowerup(
       position:
           Vector2(gunPowerUpRandomCoords.first, gunPowerUpRandomCoords.last),
       anchor: Anchor.center,
     );
-    gunPowerup.position = Vector2(400, 270);
+
     add(gunPowerup);
   }
 
@@ -399,7 +418,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     // must put coordinates back into spawn point.
     //coordinates.first, coordinates.last
     List<double> coordinates =
-        _randomCoodinatePairInWorldbounds100PxFromMainCharacter(
+        _randomCoodinatePairInWorldbounds125PxFromMainCharacter(
             characterLocation: gameRef.world.character.position);
     var enemyCharacter = EnemyCharacter(
         character: "Pink Man",
@@ -461,14 +480,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
 
   void createGrid() {
     int walkableTile = getWalkableTileInteger(levelName);
-    RenderableTiledMap tileMap = level.tileMap;
     TileLayer background =
         level.tileMap.getLayer<TileLayer>("background") as TileLayer;
-    ObjectGroup collisionObjects =
-        level.tileMap.getLayer<ObjectGroup>("collisionObjects") as ObjectGroup;
-    var collisionObjectsTileData = collisionObjects;
-    print(
-        "${collisionObjectsTileData.objects.first.x}, ${collisionObjectsTileData.objects.first.x}");
 
     var tileData = background.tileData;
     for (int i = 0; i < background.tileData!.length; i++) {
@@ -482,32 +495,12 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     }
   }
 
-  // void addObjectsToGrid(RenderableTiledMap tiledMap, List<List<int>> grid) {
-  //   // Get the ObjectLayer from the Tiled map
-  //   ObjectGroup collisionObjects =
-  //       level.tileMap.getLayer<ObjectGroup>("collisionObjects") as ObjectGroup;
-
-  //   for (final obj in collisionObjects.objects) {
-  //     final gridX = (obj.x / level.tileMap.map.tileWidth).round();
-  //     final gridY = (obj.y / level.tileMap.map.tileHeight).round();
-
-  //     // Check if the object is within the grid boundaries
-
-  //     // Set the grid value to a specific number to represent the object
-  //     grid[gridY][gridX] = 1; // You can use any value to represent objects
-  //   }
-  // }
-
   void clearLineComponents() {
     for (var child in children) {
       if (child is LineComponent) {
         remove(child);
       }
     }
-  }
-
-  void addGridToMap(List<List<int>> grid) {
-    print(grid);
   }
 
   int getWalkableTileInteger(String levelName) {

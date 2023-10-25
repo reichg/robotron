@@ -26,7 +26,6 @@ class MainCharacter extends SpriteAnimationGroupComponent
   final double stepTime = 0.05;
   double moveSpeed = 70;
   bool gunPowerupEnabled = false;
-  int score = 0;
   int health = 100;
   Timer gunPowerupTimer = Timer(8);
   CollisionMovementChecker movementChecker = CollisionMovementChecker();
@@ -157,7 +156,5 @@ class MainCharacter extends SpriteAnimationGroupComponent
     );
     gameRef.world.healthTextComponent.text = "Health: $health%";
     gameRef.world.healthBar.width = 150 * (health.toDouble() / 100);
-    gameRef.world.character.score = 0;
-    gameRef.world.scoreTextComponent.text = "Score: $score";
   }
 }

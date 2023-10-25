@@ -9,6 +9,7 @@ void main() {
 
   runApp(
     MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: MainMenuScreen(),
       themeMode: ThemeMode.dark,
       darkTheme: ThemeData.dark(),
