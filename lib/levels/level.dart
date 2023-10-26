@@ -43,7 +43,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   bool gameTimerStarted = false;
   bool gameOver = false;
   int timerCountdownToStart = 3;
-  int timeLeft = 45;
+  int timeLeft = 20;
   int timeBetweenRounds = 5;
   double enemyMoveSpeed = 30;
   int killCountTotal = 0;
@@ -84,7 +84,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   Random rnd = Random();
 
   // @override
-  bool debugMode = true;
+  // bool debugMode = true;
 
   @override
   FutureOr<void> onLoad() async {

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -42,138 +43,144 @@ class _LevelSelectScreenState extends State<LevelSelectScreen> {
     return Scaffold(
       body: Container(
         color: Colors.black,
-        child: Center(
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  IconButton(
-                      onPressed: () {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) {
-                              return const MainMenuScreen();
-                            },
-                          ),
-                        );
-                      },
-                      icon: Icon(Icons.arrow_back)),
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                      child: Text(
-                        "Level Select",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontFamily: "Playfair",
-                          fontSize: 40,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                      color: const Color.fromARGB(0, 0, 0, 0),
-                      onPressed: () {},
-                      icon: Icon(Icons.arrow_back)),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    alignment: Alignment.center,
-                    width: logicalWidth * 0.9,
-                    height: 200,
-                    color: Color.fromARGB(255, 11, 11, 11),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      scrollDirection: Axis.horizontal,
-                      itemCount: levelImages.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return Container(
-                          padding: EdgeInsets.all(10),
-                          width: 350,
-                          height: 100,
-                          child: Material(
-                            child: ListTile(
-                              title: Image(
-                                image: levelImages[index].image,
-                                fit: BoxFit.contain,
-                              ),
-                              selectedTileColor:
-                                  Color.fromARGB(255, 35, 68, 146),
-                              selected: index == _selectedIndex,
-                              onTap: () {
-                                setState(() {
-                                  _selectedIndex = index;
-                                  levelName = levelNames[index];
-                                });
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateColor.resolveWith(
-                          (states) => Color.fromARGB(255, 28, 27, 27),
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                GamePlayScreen(levelName: levelName),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        "Play",
-                        style: TextStyle(
-                            fontFamily: "Playfair",
-                            fontSize: 20,
-                            fontWeight: FontWeight.w400),
-                      ),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateColor.resolveWith(
-                        (states) => Color.fromARGB(255, 28, 27, 27),
-                      ),
-                    ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                IconButton(
                     onPressed: () {
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
                           builder: (context) {
-                            return const SettingsScreen();
+                            return const MainMenuScreen();
                           },
                         ),
                       );
                     },
+                    icon: Icon(Icons.arrow_back)),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 25),
                     child: Text(
-                      "Settings",
+                      "Level Select",
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                          fontFamily: "Playfair",
-                          fontSize: 20,
-                          fontWeight: FontWeight.w400),
+                        color: Colors.white,
+                        fontFamily: "Playfair",
+                        fontSize: 40,
+                        fontWeight: FontWeight.normal,
+                      ),
                     ),
-                  )
+                  ),
+                ),
+                IconButton(
+                    color: const Color.fromARGB(0, 0, 0, 0),
+                    onPressed: () {},
+                    icon: Icon(Icons.arrow_back)),
+              ],
+            ),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        alignment: Alignment.center,
+                        width: logicalWidth * 0.9,
+                        height: 200,
+                        color: Color.fromARGB(255, 11, 11, 11),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          scrollDirection: Axis.horizontal,
+                          itemCount: levelImages.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Container(
+                              padding: EdgeInsets.all(10),
+                              width: 350,
+                              height: 100,
+                              child: Material(
+                                child: ListTile(
+                                  title: Image(
+                                    image: levelImages[index].image,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  selectedTileColor:
+                                      Color.fromARGB(255, 35, 68, 146),
+                                  selected: index == _selectedIndex,
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedIndex = index;
+                                      levelName = levelNames[index];
+                                    });
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 15),
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateColor.resolveWith(
+                              (states) => Color.fromARGB(255, 28, 27, 27),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    GamePlayScreen(levelName: levelName),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            "Play",
+                            style: TextStyle(
+                                fontFamily: "Playfair",
+                                fontSize: 20,
+                                fontWeight: FontWeight.w400),
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateColor.resolveWith(
+                            (states) => Color.fromARGB(255, 28, 27, 27),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return const SettingsScreen();
+                              },
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "Settings",
+                          style: TextStyle(
+                              fontFamily: "Playfair",
+                              fontSize: 20,
+                              fontWeight: FontWeight.w400),
+                        ),
+                      )
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -11,7 +11,7 @@ class SettingsScreen extends StatelessWidget {
         color: Colors.black,
         alignment: Alignment.center,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 50.0),
@@ -25,27 +25,37 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            ElevatedButton(
-              style: ButtonStyle(
-                backgroundColor: MaterialStateColor.resolveWith(
-                  (states) => Color.fromARGB(255, 28, 27, 27),
-                ),
-              ),
-              onPressed: () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return const MainMenuScreen();
-                    },
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateColor.resolveWith(
+                          (states) => Color.fromARGB(255, 28, 27, 27),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return const MainMenuScreen();
+                            },
+                          ),
+                        );
+                      },
+                      child: Text(
+                        "Main Menu",
+                        style: TextStyle(
+                            fontFamily: "Playfair",
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
-                );
-              },
-              child: Text(
-                "Main Menu",
-                style: TextStyle(
-                    fontFamily: "Playfair",
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold),
+                ],
               ),
             )
           ],

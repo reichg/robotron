@@ -12,9 +12,10 @@ class MainMenuScreen extends StatelessWidget {
         color: Colors.black,
         child: Center(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
-                padding: EdgeInsets.symmetric(vertical: 50),
+                padding: const EdgeInsets.only(bottom: 40.0),
                 child: Text(
                   "Robotron",
                   style: TextStyle(
