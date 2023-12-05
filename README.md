@@ -1,16 +1,9 @@
 # robotron
 
-A new Flutter project.
+Just a simple shooter survival game using Dart, Flutter, and Flame for Flutter game development.
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
+## Demo
 
-A few resources to get you started if this is your first Flutter project:
+https://github.com/reichg/robotron/assets/18335251/44271185-baaa-4f5e-97f8-b8e9b176fe73
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
