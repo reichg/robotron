@@ -53,6 +53,7 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
   LineSegment? collisionSegment;
   double delay = 0;
   bool turnedCorner = true;
+  Vector2 previousMovement = Vector2.zero();
 
   CollisionMovementChecker movementChecker = CollisionMovementChecker();
 
@@ -67,7 +68,7 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
       RectangleHitbox(
         anchor: Anchor.center,
         position: Vector2(width / 2, height / 2),
-        size: Vector2.all(8),
+        size: Vector2.all(12),
       ),
     );
     pathToMainCharacterVisualization = LineComponent(
@@ -95,6 +96,7 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
     super.update(dt);
     removeLineComponents();
     path.clear();
+
     List<int> currentMainCharacterPosition = [
       (characterToChase.x.toInt() / gameRef.world.worldTileSize).round(),
       (characterToChase.y.toInt() / gameRef.world.worldTileSize).round()
@@ -116,13 +118,11 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
       convertAndAddCoordinatesToPath(tempPath, path);
     }
 
-    if (path.isNotEmpty) {
+    if (path.isNotEmpty && path.length > 1) {
       // Move the AI towards the next step in the path
       addAStarPathVisualization(path);
 
-      // List<List<double>> pathCasted = path;
       final nextStep = path[1];
-      // addAStarPathVisualization(path);
 
       current = PlayerState.running;
 
@@ -131,6 +131,7 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
                   nextStep[1].toDouble() * gameRef.world.worldTileSize) -
               position)
           .normalized();
+      previousMovement = direction;
       moveAlongPath(direction, dt);
 
       if (!isFacingLeft && direction[0] < 0) {
@@ -141,6 +142,8 @@ class EnemyCharacter extends SpriteAnimationGroupComponent
         flipHorizontallyAroundCenter();
         isFacingLeft = false;
       }
+    } else {
+      moveAlongPath(previousMovement, dt);
     }
   }
 

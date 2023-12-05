@@ -11,16 +11,25 @@ class PauseButton extends StatelessWidget {
   static final double deviceWidth = screenSize.width / aspectRatio;
   static final double deviceHeight = screenSize.height / aspectRatio;
   PauseButton({Key? key, required this.gameRef}) : super(key: key);
-  //((deviceWidth / 2) - 320 - deviceWidth * 0.027), (deviceHeight / 2)
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Positioned(
-          bottom: (deviceHeight / 2) - (deviceHeight * 0.35),
-          left: (deviceWidth / 2) - 320 - (deviceWidth * 0.067),
-          child: ElevatedButton(
-            child: Text("Pause"),
+          bottom: ((deviceHeight - gameRef.world.level.height) / 2) + 20,
+          left: ((deviceWidth - gameRef.world.level.width) / 2) - 62,
+          child: IconButton(
+            icon: Icon(
+              Icons.pause,
+              color: Colors.yellow,
+              size: 45,
+            ),
+            style: ButtonStyle(
+              backgroundColor: MaterialStateColor.resolveWith(
+                (states) => Color.fromARGB(255, 179, 76, 20),
+              ),
+            ),
             onPressed: () {
               gameRef.pauseEngine();
               gameRef.overlays.add(PauseMenu.ID);

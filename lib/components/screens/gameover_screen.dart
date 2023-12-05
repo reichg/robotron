@@ -11,31 +11,88 @@ class GameOverScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
+      body: Container(
+        color: Colors.black,
         child: Column(
           children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        GamePlayScreen(levelName: gameRef.levelName),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 70.0),
+                  child: Text(
+                    "Game Over",
+                    style: TextStyle(
+                      fontFamily: "Playfair",
+                      fontSize: 50,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
-                );
-              },
-              child: Text("Play Again!"),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (context) => const MainMenuScreen(),
-                  ),
-                );
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateColor.resolveWith(
+                              (states) => Color.fromARGB(255, 28, 27, 27),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => GamePlayScreen(
+                                    levelName: gameRef.levelName),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            "Play Again",
+                            style: TextStyle(
+                                fontFamily: "Playfair",
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateColor.resolveWith(
+                              (states) => Color.fromARGB(255, 28, 27, 27),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => const MainMenuScreen(),
+                              ),
+                            );
 
-                // gameRef.reset();
-              },
-              child: Text("Main Menu!"),
+                            // gameRef.reset();
+                          },
+                          child: Text(
+                            "Main Menu",
+                            style: TextStyle(
+                                fontFamily: "Playfair",
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
