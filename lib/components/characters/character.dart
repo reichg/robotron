@@ -26,7 +26,6 @@ class MainCharacter extends SpriteAnimationGroupComponent
   final double stepTime = 0.05;
   double moveSpeed = 70;
   bool gunPowerupEnabled = false;
-  int score = 0;
   int health = 100;
   Timer gunPowerupTimer = Timer(8);
   CollisionMovementChecker movementChecker = CollisionMovementChecker();
@@ -78,8 +77,9 @@ class MainCharacter extends SpriteAnimationGroupComponent
         health = 0;
       }
 
-      gameRef.world.healthTextComponent.text = "Health: ${health.toString()}%";
-      gameRef.world.healthBar.width = 150 * (health.toDouble() / 100);
+      gameRef.world.healthTextComponent.text =
+          "Health \n  ${health.toString()}%";
+      gameRef.world.healthBar.width = 70 * (health.toDouble() / 100);
     }
     super.onCollision(intersectionPoints, other);
   }
@@ -90,8 +90,10 @@ class MainCharacter extends SpriteAnimationGroupComponent
 
     final originalPosition = position.clone();
 
-    double vecX = (gameRef.leftJoystick.relativeDelta * moveSpeed * dt)[0];
-    double vecY = (gameRef.leftJoystick.relativeDelta * moveSpeed * dt)[1];
+    double vecX =
+        (gameRef.world.leftJoystick.relativeDelta * moveSpeed * dt)[0];
+    double vecY =
+        (gameRef.world.leftJoystick.relativeDelta * moveSpeed * dt)[1];
 
     final movementThisFrame = Vector2(vecX, vecY);
 
@@ -101,16 +103,18 @@ class MainCharacter extends SpriteAnimationGroupComponent
         originalPosition: originalPosition,
         collisionObjects: gameRef.world.collisionObjects);
 
-    if (gameRef.leftJoystick.relativeDelta[0] < 0 && isFacingLeft == false) {
+    if (gameRef.world.leftJoystick.relativeDelta[0] < 0 &&
+        isFacingLeft == false) {
       flipHorizontallyAroundCenter();
       isFacingLeft = true;
     }
-    if (gameRef.leftJoystick.relativeDelta[0] > 0 && isFacingLeft == true) {
+    if (gameRef.world.leftJoystick.relativeDelta[0] > 0 &&
+        isFacingLeft == true) {
       flipHorizontallyAroundCenter();
       isFacingLeft = false;
     }
 
-    if (gameRef.leftJoystick.direction == JoystickDirection.idle) {
+    if (gameRef.world.leftJoystick.direction == JoystickDirection.idle) {
       current = PlayerState.idle;
     } else {
       current = PlayerState.running;
@@ -155,9 +159,7 @@ class MainCharacter extends SpriteAnimationGroupComponent
       topRight.x - ((topRight.x - bottomLeft.x) / 2),
       bottomLeft.y - ((bottomLeft.y - topRight.y) / 2),
     );
-    gameRef.world.healthTextComponent.text = "Health: $health%";
-    gameRef.world.healthBar.width = 150 * (health.toDouble() / 100);
-    gameRef.world.character.score = 0;
-    gameRef.world.scoreTextComponent.text = "Score: $score";
+    gameRef.world.healthTextComponent.text = "Health \n  $health%";
+    gameRef.world.healthBar.width = 70 * (health.toDouble() / 100);
   }
 }

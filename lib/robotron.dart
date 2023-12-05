@@ -1,24 +1,18 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
+import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
-import 'package:robotron/components/joystick/left_joystick.dart';
-import 'package:robotron/components/joystick/right_joystick.dart';
 import 'package:robotron/levels/level.dart';
 
 class Robotron extends FlameGame {
   final String levelName;
 
-  @override
   Color backgroundColor() => Color(0xFF211F30);
   late final CameraComponent cam;
-  late final LeftJoystick leftJoystick;
-  late final RightJoystick rightJoystick;
-  late TextComponent leftJoystickTextComponent;
-  late TextComponent rightJoystickTextComponent;
   late Level world;
   bool gameOver = false;
 
@@ -40,53 +34,20 @@ class Robotron extends FlameGame {
     await loadWorld();
     cam = CameraComponent.withFixedResolution(
       world: world,
-      width: 640,
-      height: 360,
+      width: deviceWidth,
+      height: deviceHeight,
     );
-    cam.viewfinder.anchor = Anchor.topLeft;
+    cam.viewfinder.anchor = Anchor.center;
 
     addAll([
       cam,
       world,
     ]);
-    createJoysticksAndText();
 
     return super.onLoad();
   }
 
   Future<void> loadWorld() async {
     world = Level(levelName: levelName);
-  }
-
-  // Create and add joysticks and their components to game.
-  void createJoysticksAndText() {
-    leftJoystick = LeftJoystick();
-    leftJoystick.anchor = Anchor.center;
-    leftJoystick.position = Vector2(
-        ((deviceWidth / 2) - 320 - deviceWidth * 0.027), (deviceHeight / 2));
-    rightJoystick = RightJoystick();
-    rightJoystick.position = Vector2(
-        ((deviceWidth / 2) + 320 + deviceWidth * 0.027), deviceHeight / 2);
-    rightJoystick.anchor = Anchor.center;
-
-    leftJoystickTextComponent = TextComponent(
-      text: "Move",
-      anchor: Anchor.center,
-      position: Vector2(((deviceWidth / 2) - 320 - deviceWidth * 0.027),
-          (deviceHeight / 2) - 60),
-    );
-
-    rightJoystickTextComponent = TextComponent(
-      text: "Shoot",
-      anchor: Anchor.center,
-      position: Vector2(((deviceWidth / 2) + 320 + deviceWidth * 0.027),
-          (deviceHeight / 2) - 60),
-    );
-    addAll([
-      leftJoystick,
-      rightJoystick,
-      leftJoystickTextComponent,
-      rightJoystickTextComponent
-    ]);
   }
 }
