@@ -12,6 +12,7 @@ import 'package:robotron/components/bullet/bullet.dart';
 import 'package:robotron/components/characters/character.dart';
 import 'package:robotron/components/characters/enemy_character.dart';
 import 'package:robotron/components/collision/collision_objects.dart';
+import 'package:robotron/components/joystick/left_joystick.dart';
 import 'package:robotron/components/joystick/right_joystick.dart';
 import 'package:robotron/components/line/line_component.dart';
 import 'package:robotron/components/screens/gameover_screen.dart';
@@ -25,7 +26,6 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   // Components
   late TiledComponent level;
   late MainCharacter character;
-  late RightJoystick rightJoystick;
   late TextComponent healthTextComponent;
   late TextComponent countdownTextComponent;
   late TextComponent timeLeftTextComponent;
@@ -37,6 +37,11 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   late LineComponent visualPathToPlayerFromEnemy;
   late GunPowerup gunPowerup;
   late int worldTileSize;
+
+  late final LeftJoystick leftJoystick;
+  late final RightJoystick rightJoystick;
+  late TextComponent leftJoystickTextComponent;
+  late TextComponent rightJoystickTextComponent;
 
   // Game information
   bool gameStarted = false;
@@ -92,13 +97,15 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       "$levelName.tmx",
       Vector2.all(16),
     );
+
     add(level);
 
     topRight = level.positionOfAnchor(Anchor.topRight);
 
     bottomLeft = level.positionOfAnchor(Anchor.bottomLeft);
-    print("top right: $topRight, bottom left: $bottomLeft");
+
     // Create components
+    createJoysticksAndText();
     createCollisionObjects();
     createHealthBar();
     createCharacter();
@@ -108,8 +115,15 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     getCollisionBoundaries();
     createGrid();
 
-    // addGridToMap(grid);
+    // level.position = Vector2(
+    //     (deviceWidth - level.width) / 2, (deviceHeight - level.height) / 2);
+    print("$deviceHeight, $deviceWidth, $screenSize");
+    gameRef.cam.viewfinder.position =
+        Vector2(level.width / 2, level.height / 2);
+    // print("top right: $topRight, bottom left: $bottomLeft");
+    // print("level width: ${level.width}, level height: ${level.height}");
     worldTileSize = 16;
+
     // Start timers
     startCountdown.start();
     bulletSpawnTimer.start();
@@ -159,7 +173,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       gameTimer.update(dt);
       gameTimer.onTick = () {
         timeLeft -= 1;
-        timeLeftTextComponent.text = "Time Left: $timeLeft";
+        timeLeftTextComponent.text = "Time: $timeLeft";
         if (timeLeft == 0) {
           gameTimer.stop();
           gameOver = true;
@@ -187,8 +201,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       // Controls bullet spawn time
       bulletSpawnTimer.update(dt);
       bulletSpawnTimer.onTick = () {
-        if (gameRef.rightJoystick.direction != JoystickDirection.idle) {
-          var intensity = gameRef.rightJoystick.intensity;
+        if (gameRef.world.rightJoystick.direction != JoystickDirection.idle) {
+          var intensity = gameRef.world.rightJoystick.intensity;
 
           // Want all bullets moving same speed so added the joystick intensity
           if (intensity > .95) {
@@ -301,7 +315,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     totalSpawned = 0;
     timerCountdownToStart = 3;
     timeBetweenRounds = 5;
-    gameRef.world.timeLeftTextComponent.text = "Time Left: $timeLeft";
+    gameRef.world.timeLeftTextComponent.text = "Time: $timeLeft";
     gameRef.world.killCountThisRoundComponent.text =
         "Round Kills: ${killCountThisRound.toString()}";
   }
@@ -322,12 +336,18 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   // Create all text components in the game (score, health, countdown, and time left)
   void createTextComponents() {
     killCountTotalComponent = TextComponent(
-        text: "Kills: $killCountTotal",
+        textRenderer: TextPaint(
+            style: TextStyle(
+          fontSize: 25,
+        )),
+        text: """Kills\n  $killCountTotal""",
         anchor: Anchor.topLeft,
-        position: Vector2(70, 10));
-    add(killCountTotalComponent);
+        position: Vector2((deviceWidth - level.width) / 2 - 60,
+            ((deviceHeight - level.height) / 2) + 20));
+    gameRef.add(killCountTotalComponent);
 
     killCountThisRoundComponent = TextComponent(
+        textRenderer: TextPaint(style: TextStyle(fontSize: 20)),
         text: "Round Kills: $killCountThisRound",
         anchor: Anchor.topLeft,
         position:
@@ -335,14 +355,16 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     add(killCountThisRoundComponent);
 
     healthTextComponent = TextComponent(
-      text: "Health: 100%",
-      anchor: Anchor.topRight,
-      position: Vector2(550, 5),
-    );
-    add(healthTextComponent);
+        textRenderer: TextPaint(style: TextStyle(fontSize: 23)),
+        text: "Health \n ${gameRef.world.character.health}%",
+        anchor: Anchor.topRight,
+        position: Vector2((deviceWidth + level.width) / 2 + 70,
+            ((deviceHeight - level.height) / 2) + 20));
+    gameRef.add(healthTextComponent);
 
     currentRoundTextComponent = TextComponent(
-      text: "Round: 0",
+      textRenderer: TextPaint(style: TextStyle(fontSize: 20)),
+      text: "Round: 1",
       anchor: Anchor.topCenter,
       position:
           Vector2(topRight.x - ((topRight.x - bottomLeft.x) / 2) - 100, 320),
@@ -350,6 +372,12 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     add(currentRoundTextComponent);
 
     countdownTextComponent = TextComponent(
+      textRenderer: TextPaint(
+        style: TextStyle(
+          fontSize: 23,
+          background: Paint()..color = const Color.fromARGB(141, 0, 0, 0),
+        ),
+      ),
       text: "Countdown: 3",
       anchor: Anchor.center,
       position: Vector2(
@@ -360,13 +388,11 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
     add(countdownTextComponent);
 
     timeLeftTextComponent = TextComponent(
-      text: "Time Left: $timeLeft",
-      anchor: Anchor.center,
-      position:
-          Vector2(topRight.x - ((topRight.x - bottomLeft.x) / 2) - 25, 15),
-    );
+        text: "Time: $timeLeft",
+        anchor: Anchor.center,
+        position: Vector2((deviceWidth) / 2, 50));
 
-    add(timeLeftTextComponent);
+    gameRef.add(timeLeftTextComponent);
   }
 
   // Create character and add to game
@@ -433,8 +459,8 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   }
 
   void createBullet() {
-    double vecX = (gameRef.rightJoystick.relativeDelta)[0];
-    double vecY = (gameRef.rightJoystick.relativeDelta)[1];
+    double vecX = (gameRef.world.rightJoystick.relativeDelta)[0];
+    double vecY = (gameRef.world.rightJoystick.relativeDelta)[1];
     var bullet = Bullet(vecX: vecX, vecY: vecY);
     bullet.anchor = Anchor.center;
     bullet.position = character.absoluteCenter;
@@ -444,7 +470,7 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
   void createHealthBar() {
     // Healthbar visual
     healthBar = RectangleComponent.fromRect(
-      Rect.fromLTWH(405, 5, 150, 30),
+      Rect.fromLTWH(638, 45, 70, 30),
       paint: Paint()..color = Colors.red.withOpacity(1),
     );
     add(healthBar);
@@ -512,5 +538,37 @@ class Level extends World with HasGameRef<Robotron>, HasCollisionDetection {
       default:
     }
     return 0;
+  }
+
+  // Create and add joysticks and their components to game.
+  void createJoysticksAndText() {
+    leftJoystick = LeftJoystick();
+    leftJoystick.anchor = Anchor.center;
+    leftJoystick.position =
+        Vector2(((deviceWidth - level.width) / 2) - 32, deviceHeight / 2);
+    rightJoystick = RightJoystick();
+    rightJoystick.position =
+        Vector2(((deviceWidth + level.width) / 2) + 32, deviceHeight / 2);
+    rightJoystick.anchor = Anchor.center;
+
+    leftJoystickTextComponent = TextComponent(
+      text: "Move",
+      anchor: Anchor.center,
+      position: Vector2(
+          ((deviceWidth - level.width) / 2) - 32, deviceHeight / 2 + 55),
+    );
+
+    rightJoystickTextComponent = TextComponent(
+      text: "Shoot",
+      anchor: Anchor.center,
+      position: Vector2(
+          ((deviceWidth + level.width) / 2) + 32, (deviceHeight / 2) + 55),
+    );
+    gameRef.addAll([
+      leftJoystick,
+      rightJoystick,
+      leftJoystickTextComponent,
+      rightJoystickTextComponent
+    ]);
   }
 }

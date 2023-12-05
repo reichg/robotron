@@ -42,7 +42,7 @@ class Bullet extends SpriteComponent
       gameRef.world.killCountTotal += 1;
       gameRef.world.killCountThisRound += 1;
       gameRef.world.killCountTotalComponent.text =
-          "Kills: ${gameRef.world.killCountTotal.toString()}";
+          "Kills \n  ${gameRef.world.killCountTotal.toString()}";
       gameRef.world.killCountThisRoundComponent.text =
           "Round Kills: ${gameRef.world.killCountThisRound.toString()}";
     }
